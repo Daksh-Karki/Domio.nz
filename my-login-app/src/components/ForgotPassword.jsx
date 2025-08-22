@@ -1,19 +1,33 @@
 import React, { useState } from "react";
 import "../styles/ForgotPassword.css";
 import p2 from "../assets/p2.jpg";
+import { resetPassword } from "../firebase";
+import { Link } from "react-router-dom";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!email) {
       setStatus("Please enter your email.");
       return;
     }
-    setStatus(`Password reset link sent to ${email}!`);
-    console.log(`Password reset requested for: ${email}`);
+    
+    setLoading(true);
+    setStatus("");
+    
+    try {
+      await resetPassword(email);
+      setStatus(`Password reset link sent to ${email}! Check your email.`);
+    } catch (error) {
+      console.error("Password reset error:", error);
+      setStatus(`Password reset failed: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -43,15 +57,15 @@ export default function ForgotPassword() {
             />
           </div>
 
-          <button type="submit" className="reset-btn">
-            Send Reset Link
+          <button type="submit" className="reset-btn" disabled={loading}>
+            {loading ? "Sending..." : "Send Reset Link"}
           </button>
         </form>
 
         {status && <div className="status-msg">{status}</div>}
 
         <div className="forgot-footer">
-          Remember your password? <a href="/login">Sign in</a>
+          Remember your password? <Link to="/login">Sign in</Link>
         </div>
       </div>
     </div>

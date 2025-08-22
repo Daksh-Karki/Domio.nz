@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import "../styles/Login.css";
 import p1 from "../assets/p1.jpg";
+import { signIn, auth } from "../firebase";
+import { useNavigate } from "react-router-dom";
 
 export default function Login() {
   const [role, setRole] = useState("Landlord");
@@ -9,23 +11,45 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [adminId, setAdminId] = useState("");
   const [status, setStatus] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const roles = ["Landlord", "Tenant", "Admin"];
 
   const handleRoleClick = (r) => setRole(r);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setStatus("");
 
-    if (role === "Admin" && (!email || !adminId || !password)) {
-      setStatus("Please enter your Email, Admin ID, and Password.");
-      return;
+    try {
+      if (role === "Admin" && (!email || !adminId || !password)) {
+        setStatus("Please enter your Email, Admin ID, and Password.");
+        return;
+      }
+
+      // For now, handle Admin login separately (you can implement custom admin logic later)
+      if (role === "Admin") {
+        setStatus("Admin login functionality coming soon!");
+        return;
+      }
+
+      // Use Firebase authentication for Landlord and Tenant
+      await signIn(email, password);
+      setStatus(`Login successful as a ${role}! Redirecting to dashboard...`);
+      
+      // Redirect to dashboard after successful login
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 1500);
+      
+    } catch (error) {
+      console.error("Login error:", error);
+      setStatus(`Login failed: ${error.message}`);
+    } finally {
+      setLoading(false);
     }
-
-    setStatus(`Login successful as a ${role}! Redirecting to dashboard...`);
-    console.log(
-      `Login attempt successful for role: ${role}, email: ${email}, Admin ID: ${adminId}`
-    );
   };
 
   return (
@@ -136,15 +160,15 @@ export default function Login() {
             </div>
           )}
 
-          <button type="submit" className="signin-btn">
-            Sign in
+          <button type="submit" className="signin-btn" disabled={loading}>
+            {loading ? "Signing in..." : "Sign in"}
           </button>
         </form>
 
         {status && <div className="status-msg">{status}</div>}
 
         <div className="login-footer">
-          Don't have an account? <a href="#">Sign up</a>
+          Don't have an account? <Link to="/signup">Sign up</Link>
         </div>
       </div>
     </div>
