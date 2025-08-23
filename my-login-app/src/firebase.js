@@ -40,3 +40,4 @@ export const logOut = () => {
 };
 
 export default app;
+
