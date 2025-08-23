@@ -76,3 +76,4 @@ If you want to add Firestore database later, you can set up security rules in th
 - Add email verification
 - Set up hosting for production deployment
 
+

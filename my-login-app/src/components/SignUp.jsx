@@ -37,7 +37,6 @@ export default function SignUp() {
       await signUp(email, password);
       setStatus(`Account created successfully as a ${role}! Redirecting to login...`);
       
-      // Redirect to login after successful signup
       setTimeout(() => {
         navigate("/login");
       }, 2000);
@@ -131,4 +130,5 @@ export default function SignUp() {
     </div>
   );
 }
+
 
