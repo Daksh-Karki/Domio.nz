@@ -8,87 +8,35 @@
 
 /* Full page background */
 body {
-  background: linear-gradient(135deg, #4d4d4d, #d9e2ec); /* soft professional gradient */
+  background: linear-gradient(135deg, #4d4d4d, #d9e2ec);
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 100vh;
 }
 
-/* Main login box */
+/* Main login box (single column now) */
 .login-container {
-  display: flex;
-  width: 820px;
+  width: 420px;
   max-width: 95%;
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12);
   background-color: #ffffff;
-  transition: all 0.3s ease;
-}
-
-/* Left side image */
-.login-left {
-  flex: 1;
-  display: block;
-}
-.login-left img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.5s ease;
-}
-.login-left img:hover {
-  transform: scale(1.03);
-}
-
-/* Right side form */
-.login-right {
-  flex: 1;
-  padding: 50px 45px;
+  padding: 50px 35px;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  min-height: 400px;
-  background-color: #fdfdfd;
+  transition: all 0.3s ease;
 }
 
-/* Branding */
-.brand {
-  font-size: 2.75rem;
-  font-weight: 900;
-  background: linear-gradient(90deg, #0ea5e9, #3b82f6); /* gradient text */
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  position: relative;
-  margin-bottom: 6px;
-}
 
-/* Optional subtle shadow behind gradient text */
-.brand::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  width: 100%;
-  height: 6px;
-  background: rgba(14, 165, 233, 0.25); /* subtle underline highlight */
-  border-radius: 3px;
-  z-index: -1;
-}
-
-/* Subtitle styling (optional enhancement) */
+/* Subtitle */
 .subtitle {
   color: #4b5563;
   margin-bottom: 28px;
   font-size: 1rem;
   letter-spacing: 0.5px;
-}
-
-.subtitle {
-  color: #4b5563;
-  margin-bottom: 28px;
-  font-size: 1rem;
 }
 
 /* Role selection buttons */
@@ -106,21 +54,18 @@ body {
   background-size: 200% 100%;
   font-size: 0.9rem;
   cursor: pointer;
-  color: rgb(255, 255, 255);
-  transition: color 0.3s ease, background-position 0.5s ease, background 0.5s ease; /* added background transition */
+  color: #fff;
+  transition: color 0.3s ease, background-position 0.5s ease;
 }
 .role-selection button:hover {
   background-position: 100% 0;
-  color: white;
 }
-
 .role-selection button.active {
-  background: #9ca3af; /* grey background for selected */
+  background: #9ca3af;
   color: white;
   border-color: #9ca3af;
   box-shadow: none;
 }
-
 
 /* Input groups */
 .input-group {
@@ -173,16 +118,15 @@ body {
   font-size: 0.95rem;
   border: none;
   border-radius: 10px;
-  background: linear-gradient(270deg, #8b5cf6, #a855f7, #0ea5e9, #3b82f6); /* Apply the full gradient from the start */
-  background-size: 200% 100%; /* Set an initial background size, slightly larger than 100% to allow for movement */
+  background: linear-gradient(270deg, #8b5cf6, #a855f7, #0ea5e9, #3b82f6);
+  background-size: 200% 100%;
   color: white;
   cursor: pointer;
-  transition: transform 0.3s ease, background-position 0.5s ease; /* Transition only the background-position */
+  transition: transform 0.3s ease, background-position 0.5s ease;
 }
-
 .signin-btn:hover {
   transform: translateY(-2px);
-  background-position: 100% 0; /* Animate the background-position to create the hover effect */
+  background-position: 100% 0;
 }
 
 /* Status message */
@@ -210,40 +154,31 @@ body {
   color: #0284c7;
 }
 
-/* Mobile responsiveness */
-@media(max-width: 768px) {
-  .login-container {
-    flex-direction: column;
-    width: 90%;
-  }
-  .login-left {
-    display: none;
-  }
-  .login-right {
-    width: 100%;
-    padding: 40px 20px;
-  }
-}
-
 /* Custom styled checkbox */
 .form-controls input[type="checkbox"] {
   width: 18px;
   height: 18px;
-  accent-color: #0ea5e9; /* matches your theme color */
+  accent-color: #0ea5e9;
   cursor: pointer;
   border-radius: 4px;
   border: 1px solid #cbd5e1;
   transition: all 0.3s ease;
 }
-
 .form-controls input[type="checkbox"]:hover {
   border-color: #3b82f6;
 }
-
 .form-controls label {
   display: flex;
   align-items: center;
   gap: 4px;
   font-size: 0.875rem;
   color: #4b5563;
+}
+
+/* Mobile responsiveness */
+@media(max-width: 480px) {
+  .login-container {
+    width: 95%;
+    padding: 30px 20px;
+  }
 }

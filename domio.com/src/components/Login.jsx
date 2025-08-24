@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import "../styles/Login.css";
-import p1 from "../assets/p1.jpg";
-import { signIn, auth } from "../firebase";
+import { signIn } from "../firebase";
 import { useNavigate } from "react-router-dom";
 
 export default function Login() {
@@ -29,17 +28,14 @@ export default function Login() {
         return;
       }
 
-      // For now, handle Admin login separately (you can implement custom admin logic later)
       if (role === "Admin") {
         setStatus("Admin login functionality coming soon!");
         return;
       }
 
-      // Use Firebase authentication for Landlord and Tenant
       await signIn(email, password);
       setStatus(`Login successful as a ${role}! Redirecting to dashboard...`);
       
-      // Redirect to dashboard after successful login
       setTimeout(() => {
         navigate("/dashboard");
       }, 1500);
@@ -54,10 +50,6 @@ export default function Login() {
 
   return (
     <div className="login-container">
-      {/* Left Side: Image */}
-      <div className="login-left">
-        <img src={p1} alt="Modern house" />
-      </div>
 
       {/* Right Side: Login Form */}
       <div className="login-right">
