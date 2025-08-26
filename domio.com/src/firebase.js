@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, signOut } from 'firebase/auth';
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, signOut, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
 // Your Firebase configuration object
@@ -22,6 +22,9 @@ export const auth = getAuth(app);
 // Initialize Cloud Firestore and get a reference to the service
 export const db = getFirestore(app);
 
+// Google Auth Provider
+const googleProvider = new GoogleAuthProvider();
+
 // Authentication functions
 export const signUp = (email, password) => {
   return createUserWithEmailAndPassword(auth, email, password);
@@ -31,6 +34,10 @@ export const signIn = (email, password) => {
   return signInWithEmailAndPassword(auth, email, password);
 };
 
+export const signInWithGoogle = () => {
+  return signInWithPopup(auth, googleProvider);
+};
+
 export const resetPassword = (email) => {
   return sendPasswordResetEmail(auth, email);
 };
@@ -38,6 +45,9 @@ export const resetPassword = (email) => {
 export const logOut = () => {
   return signOut(auth);
 };
+
+// Export signOut function directly for use in components
+export { signOut };
 
 export default app;
 

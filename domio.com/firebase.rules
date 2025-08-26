@@ -1,0 +1,52 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function hasRole(role) {
+      return request.auth != null && (
+        request.auth.token.role == role ||
+        (role == 'Admin' && request.auth.token.admin == true)
+      );
+    }
+
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(userId) { return request.auth != null && request.auth.uid == userId; }
+
+    // Users collection: allow read own profile; admins read all; write only by owner or admin
+    match /users/{userId} {
+      allow read: if isOwner(userId) || hasRole('Admin');
+      allow create: if isOwner(userId) || hasRole('Admin');
+      allow update: if isOwner(userId) || hasRole('Admin');
+      allow delete: if hasRole('Admin');
+    }
+
+    // Properties collection
+    match /properties/{propId} {
+      allow read: if isSignedIn();
+      // Landlords can write their own properties; Admin can write all
+      allow create, update, delete: if hasRole('Admin') || (hasRole('Landlord') && request.resource.data.ownerId == request.auth.uid);
+    }
+
+    // Tenancies: link between property and tenant
+    match /tenancies/{tenancyId} {
+      allow read: if isSignedIn();
+      // Landlord who owns property or the tenant on the record or admin
+      allow create, update, delete: if hasRole('Admin') ||
+        (hasRole('Landlord') && request.resource.data.landlordId == request.auth.uid) ||
+        (hasRole('Tenant') && request.resource.data.tenantId == request.auth.uid);
+    }
+
+    // Payments: tenants can create their own payments; landlords/admin read
+    match /payments/{paymentId} {
+      allow read: if hasRole('Admin') || hasRole('Landlord') || (hasRole('Tenant') && resource.data.tenantId == request.auth.uid);
+      allow create: if hasRole('Tenant') && request.resource.data.tenantId == request.auth.uid;
+      allow update, delete: if hasRole('Admin');
+    }
+
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+
