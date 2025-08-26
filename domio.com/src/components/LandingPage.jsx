@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { auth, signOut } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
+import Profile from "./Profile.jsx";
 import "../styles/LandingPage.css";
 
 export default function LandingPage() {
@@ -112,7 +113,7 @@ export default function LandingPage() {
                   <div className="dropdown-header">
                     <span className="dropdown-email">{user.email}</span>
                   </div>
-                  <Link to="/profile" className="dropdown-item">My Profile</Link>
+                  <Link to="/Profile" className="dropdown-item">My Profile</Link>
                   <Link to="/my-properties" className="dropdown-item">My Properties</Link>
                   <Link to="/applications" className="dropdown-item">Applications</Link>
                   <Link to="/settings" className="dropdown-item">Settings</Link>
