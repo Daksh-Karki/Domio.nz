@@ -27,7 +27,8 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="forgot-container">
+    <div className="forgot-page-wrapper">
+      <div className="forgot-container">
       {/* Left Side Image */}
       <div className="forgot-left">
         <img src={p1} alt="Modern house" />
@@ -42,7 +43,7 @@ export default function ForgotPassword() {
         >
           ×
         </button>
-        <div className="brand">Domio</div>
+        <div className="brand">DOMIIO.NZ</div>
         <div className="subtitle">Reset your password</div>
 
         <h2 style={{ fontWeight: "bold", marginBottom: "20px", fontSize: "1.25rem" }}>
@@ -70,6 +71,7 @@ export default function ForgotPassword() {
         <div className="forgot-footer">
           Remember your password? <Link to="/login">Sign in</Link>
         </div>
+      </div>
       </div>
     </div>
   );

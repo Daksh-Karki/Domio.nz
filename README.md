@@ -1,4 +1,4 @@
-# Domio - Property Rental Platform
+# DOMIIO.NZ - Property Rental Platform
 
 A modern property rental platform built with React and Vite.
 

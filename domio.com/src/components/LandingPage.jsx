@@ -41,7 +41,7 @@ export default function LandingPage() {
       <nav className="navbar">
         <div className="nav-container">
           <div className="nav-logo">
-            <h1>Domio</h1>
+            <h1>DOMIIO.NZ</h1>
           </div>
 
           <div className={`nav-menu ${isMenuOpen ? 'active' : ''}`}>
@@ -188,7 +188,7 @@ export default function LandingPage() {
       <section className="how-it-works">
         <div className="container">
           <div className="section-header">
-            <h2>How Domio Works</h2>
+            <h2>How DOMIIO.NZ Works</h2>
             <p>Your journey to the perfect rental home in just four simple steps</p>
           </div>
 
@@ -246,7 +246,7 @@ export default function LandingPage() {
         <div className="container">
           <div className="cta-content">
             <h2>Ready to Find Your Perfect Home?</h2>
-            <p>Join over 75,000 happy tenants who have found their ideal rental property through Domio</p>
+            <p>Join over 75,000 happy tenants who have found their ideal rental property through DOMIIO.NZ</p>
             <div className="cta-buttons">
               {user ? (
                 <Link to="/properties" className="cta-btn primary">Browse Properties</Link>
@@ -264,7 +264,7 @@ export default function LandingPage() {
         <div className="container">
           <div className="footer-content">
             <div className="footer-section">
-              <h3>Domio</h3>
+              <h3>DOMIIO.NZ</h3>
               <p>Your trusted partner in finding the perfect rental property in New Zealand.</p>
             </div>
             <div className="footer-section">
@@ -293,7 +293,7 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="footer-bottom">
-            <p>&copy; 2024 Domio. All rights reserved.</p>
+            <p>&copy; 2024 DOMIIO.NZ. All rights reserved.</p>
           </div>
         </div>
       </footer>

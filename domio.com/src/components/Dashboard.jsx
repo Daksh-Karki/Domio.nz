@@ -103,7 +103,7 @@ export default function Dashboard() {
         borderRadius: "10px"
       }}>
         <div>
-          <h1 style={{ margin: 0, color: "#333" }}>Welcome to Domio</h1>
+          <h1 style={{ margin: 0, color: "#333" }}>Welcome to DOMIIO.NZ</h1>
           <p style={{ margin: "5px 0 0 0", color: "#666" }}>
             Logged in as: {user?.email}
           </p>

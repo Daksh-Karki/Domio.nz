@@ -120,7 +120,8 @@ export default function SignUp() {
   };
 
   return (
-    <div className="signup-container">
+    <div className="signup-page-wrapper">
+      <div className="signup-container">
       {/* Left Side Image */}
       <div className="signup-left">
         <img src={p3} alt="Beautiful property" />
@@ -135,7 +136,7 @@ export default function SignUp() {
         >
           ×
         </button>
-        <div className="brand">Domio</div>
+        <div className="brand">DOMIIO.NZ</div>
         <div className="subtitle">Join us today!</div>
 
         <h2 style={{ fontWeight: "bold", marginBottom: "20px", fontSize: "1.25rem" }}>
@@ -319,6 +320,7 @@ export default function SignUp() {
         <div className="signup-footer">
           Already have an account? <Link to="/login">Sign in</Link>
         </div>
+      </div>
       </div>
     </div>
   );

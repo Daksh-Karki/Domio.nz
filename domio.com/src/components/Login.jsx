@@ -42,7 +42,8 @@ export default function Login() {
   };
 
   return (
-    <div className="login-container">
+    <div className="login-page-wrapper">
+      <div className="login-container">
       {/* Left Side Image */}
       <div className="login-left">
         <img src={p2} alt="Modern property" />
@@ -57,7 +58,7 @@ export default function Login() {
         >
           ×
         </button>
-        <div className="brand">Domio</div>
+        <div className="brand">DOMIIO.NZ</div>
         <div className="subtitle">Welcome back!</div>
 
         <h2 style={{ fontWeight: "bold", marginBottom: "20px", fontSize: "1.25rem" }}>
@@ -131,6 +132,7 @@ export default function Login() {
         <div className="login-footer">
           Don't have an account? <Link to="/signup">Sign up</Link>
         </div>
+      </div>
       </div>
     </div>
   );
