@@ -1,72 +1,24 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { auth, signOut } from "../firebase";
-import { onAuthStateChanged } from "firebase/auth";
-import Profile from "./Profile.jsx";
 import "../styles/LandingPage.css";
 
 export default function LandingPage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [debug, setDebug] = useState("Initializing...");
+  const [user, setUser] = useState(null); // For now, user is always null (no authentication)
   const navigate = useNavigate();
 
-  useEffect(() => {
-    console.log("LandingPage: Setting up auth listener");
-    setDebug("Setting up auth listener...");
-    
-    try {
-      const unsubscribe = onAuthStateChanged(auth, (user) => {
-        console.log("LandingPage: Auth state changed:", user ? user.email : "No user");
-        setDebug(`Auth state changed: ${user ? user.email : "No user"}`);
-        setUser(user);
-        setLoading(false);
-      }, (error) => {
-        console.error("LandingPage: Auth error:", error);
-        setDebug(`Auth error: ${error.message}`);
-        setLoading(false);
-      });
-
-      // Check if user is already signed in
-      const currentUser = auth.currentUser;
-      console.log("LandingPage: Current user check:", currentUser);
-      setDebug(`Current user check: ${currentUser ? currentUser.email : "None"}`);
-      
-      if (currentUser) {
-        console.log("LandingPage: User already signed in:", currentUser.email);
-        setUser(currentUser);
-        setDebug(`User already signed in: ${currentUser.email}`);
-      }
-
-      return () => {
-        console.log("LandingPage: Cleaning up auth listener");
-        setDebug("Cleaning up auth listener");
-        unsubscribe();
-      };
-    } catch (error) {
-      console.error("LandingPage: Setup error:", error);
-      setDebug(`Setup error: ${error.message}`);
-    }
-  }, []);
-
-  const handleSignOut = async () => {
-    try {
-      console.log("LandingPage: Signing out user");
-      setDebug("Signing out user...");
-      await signOut(auth);
-      navigate("/");
-    } catch (error) {
-      console.error("Sign out error:", error);
-      setDebug(`Sign out error: ${error.message}`);
-    }
+  const handleSignOut = () => {
+    setUser(null);
+    navigate("/");
   };
 
   const featuredListings = [
     { id: 1, title: "Modern Downtown Apartment", location: "Auckland CBD", price: "$650/week", image: "🏢", type: "Apartment", bedrooms: 2, bathrooms: 1 },
     { id: 2, title: "Family Home with Garden", location: "North Shore", price: "$850/week", image: "🏠", type: "House", bedrooms: 4, bathrooms: 2 },
     { id: 3, title: "Luxury Waterfront Condo", location: "Mission Bay", price: "$1,200/week", image: "🌊", type: "Condo", bedrooms: 3, bathrooms: 2 },
-    { id: 4, title: "Cozy Studio Unit", location: "Parnell", price: "$450/week", image: "🏘️", type: "Studio", bedrooms: 1, bathrooms: 1 }
+    { id: 4, title: "Cozy Studio Unit", location: "Parnell", price: "$450/week", image: "🏘️", type: "Studio", bedrooms: 1, bathrooms: 1 },
+    { id: 5, title: "Executive Penthouse", location: "Viaduct Harbour", price: "$1,800/week", image: "🏙️", type: "Penthouse", bedrooms: 3, bathrooms: 3 },
+    { id: 6, title: "Charming Cottage", location: "Ponsonby", price: "$720/week", image: "🏡", type: "Cottage", bedrooms: 2, bathrooms: 1 }
   ];
 
   return (
@@ -125,7 +77,7 @@ export default function LandingPage() {
               </div>
             ) : (
               <>
-                <Link to="/login" className="nav-btn login-btn">Sign In</Link>
+                <Link to="/login" className="nav-btn login-btn">Log In</Link>
                 <Link to="/signup" className="nav-btn signup-btn">Sign Up</Link>
               </>
             )}
@@ -202,7 +154,7 @@ export default function LandingPage() {
         <div className="container">
           <div className="section-header">
             <h2>Featured Properties</h2>
-            <p>Handpicked properties you'll love</p>
+            <p>Discover our handpicked selection of premium rental properties</p>
           </div>
 
           <div className="listings-grid">
@@ -237,7 +189,7 @@ export default function LandingPage() {
         <div className="container">
           <div className="section-header">
             <h2>How Domio Works</h2>
-            <p>Simple steps to find your perfect home</p>
+            <p>Your journey to the perfect rental home in just four simple steps</p>
           </div>
 
           <div className="steps-grid">
@@ -270,20 +222,20 @@ export default function LandingPage() {
         <div className="container">
           <div className="stats-grid">
             <div className="stat-item">
-              <div className="stat-number">10,000+</div>
+              <div className="stat-number">15,000+</div>
               <div className="stat-label">Properties Available</div>
             </div>
             <div className="stat-item">
-              <div className="stat-number">50,000+</div>
+              <div className="stat-number">75,000+</div>
               <div className="stat-label">Happy Tenants</div>
             </div>
             <div className="stat-item">
-              <div className="stat-number">5,000+</div>
-              <div className="stat-label">Landlords</div>
+              <div className="stat-number">8,500+</div>
+              <div className="stat-label">Trusted Landlords</div>
             </div>
             <div className="stat-item">
               <div className="stat-number">24/7</div>
-              <div className="stat-label">Support</div>
+              <div className="stat-label">Customer Support</div>
             </div>
           </div>
         </div>
@@ -294,7 +246,7 @@ export default function LandingPage() {
         <div className="container">
           <div className="cta-content">
             <h2>Ready to Find Your Perfect Home?</h2>
-            <p>Join thousands of people who have found their ideal rental property on Domio</p>
+            <p>Join over 75,000 happy tenants who have found their ideal rental property through Domio</p>
             <div className="cta-buttons">
               {user ? (
                 <Link to="/properties" className="cta-btn primary">Browse Properties</Link>

@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import "../styles/ForgotPassword.css";
-import p2 from "../assets/p2.jpg";
-import { resetPassword } from "../firebase";
-import { Link } from "react-router-dom";
+import p1 from "../assets/p1.jpg";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -19,26 +19,29 @@ export default function ForgotPassword() {
     setLoading(true);
     setStatus("");
     
-    try {
-      await resetPassword(email);
+    // Simulate password reset
+    setTimeout(() => {
       setStatus(`Password reset link sent to ${email}! Check your email.`);
-    } catch (error) {
-      console.error("Password reset error:", error);
-      setStatus(`Password reset failed: ${error.message}`);
-    } finally {
       setLoading(false);
-    }
+    }, 1000);
   };
 
   return (
     <div className="forgot-container">
       {/* Left Side Image */}
       <div className="forgot-left">
-        <img src={p2} alt="Modern house" />
+        <img src={p1} alt="Modern house" />
       </div>
 
       {/* Right Side Form */}
       <div className="forgot-right">
+        <button 
+          onClick={() => navigate("/")} 
+          className="close-btn"
+          aria-label="Close"
+        >
+          ×
+        </button>
         <div className="brand">Domio</div>
         <div className="subtitle">Reset your password</div>
 

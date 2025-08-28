@@ -1,50 +1,62 @@
-# Domio Monorepo
+# Domio - Property Rental Platform
 
-This repo contains two React apps:
+A modern property rental platform built with React and Vite.
 
-- `domio.com/` – Web app (Landing, Landlord, Tenant) – deploy this
-- `domio-admin/` – Admin app – run locally only (admin-only access)
+## Project Structure
 
-## Setup
+This repo contains two React applications:
 
-1. Web app
-```
+- `domio.com/` – Main web application (Property listings, user dashboard, authentication)
+- `domio-admin/` – Admin application (separate admin interface)
+
+## Setup & Development
+
+### Main Web App (domio.com)
+
+```bash
 cd domio.com
 npm install
 npm run dev
 ```
 
-2. Admin app (local only)
-```
+The application will be available at `http://localhost:5173/` (or next available port).
+
+### Admin App (domio-admin)
+
+```bash
 cd domio-admin
 npm install
-# create .env with Firebase config – VITE_FIREBASE_*
 npm run dev
 ```
 
-## Firestore Rules
-Rules in `domio.com/firebase.rules` enforce roles: Admin, Landlord, Tenant.
-Deploy them:
-```
-firebase deploy --only firestore:rules
-```
+## Features
 
-## Auth Roles (Custom Claims)
-Use the Node script to assign roles:
-```
-# requires GOOGLE_APPLICATION_CREDENTIALS for admin SDK
-node scripts/setCustomClaims.mjs <uid> <Admin|Landlord|Tenant>
-```
+- **Landing Page**: Modern property showcase with search functionality
+- **User Authentication**: Login/signup with simulated authentication
+- **Property Dashboard**: Manage properties and view analytics
+- **User Profiles**: Profile management and verification
+- **Responsive Design**: Mobile-friendly interface
 
-Clients must refresh ID token after role changes (sign out/in or force refresh).
+## Technology Stack
+
+- **Frontend**: React 19, Vite
+- **Routing**: React Router DOM
+- **Styling**: Custom CSS with modern design
+- **Icons**: Lucide React
+- **Animations**: Framer Motion
+
+## Development
+
+The application currently uses simulated authentication and mock data for development purposes. All forms and interactions work as expected in the UI.
 
 ## Deployment
-- Deploy ONLY the web app (`domio.com`).
-- Keep `domio-admin` running locally for admin users.
 
-Example with Firebase Hosting (assuming hosting set in domio.com):
-```
+Deploy the main web app (`domio.com`) to your preferred hosting platform:
+
+```bash
 cd domio.com
 npm run build
-firebase deploy --only hosting
+# Deploy the dist/ folder to your hosting service
 ```
+
+Keep the admin app (`domio-admin`) for local development and admin access only.
