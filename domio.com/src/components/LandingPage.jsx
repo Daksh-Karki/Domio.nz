@@ -1,14 +1,15 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext.jsx";
 import "../styles/LandingPage.css";
 
 export default function LandingPage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [user, setUser] = useState(null); // For now, user is always null (no authentication)
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   const handleSignOut = () => {
-    setUser(null);
+    logout();
     navigate("/");
   };
 
@@ -56,16 +57,17 @@ export default function LandingPage() {
               <div className="account-dropdown">
                 <button className="account-btn">
                   <span className="account-avatar">
-                    {user.email ? user.email.charAt(0).toUpperCase() : 'U'}
+                    {user.username ? user.username.charAt(0).toUpperCase() : 'U'}
                   </span>
-                  <span className="account-email">{user.email}</span>
+                  <span className="account-username">@{user.username}</span>
                   <span className="dropdown-arrow">▼</span>
                 </button>
                 <div className="dropdown-menu">
                   <div className="dropdown-header">
-                    <span className="dropdown-email">{user.email}</span>
+                    <span className="dropdown-username">@{user.username}</span>
+                    <span className="dropdown-name">{user.firstName} {user.lastName}</span>
                   </div>
-                  <Link to="/Profile" className="dropdown-item">My Profile</Link>
+                  <Link to="/profile" className="dropdown-item">My Profile</Link>
                   <Link to="/my-properties" className="dropdown-item">My Properties</Link>
                   <Link to="/applications" className="dropdown-item">Applications</Link>
                   <Link to="/settings" className="dropdown-item">Settings</Link>
@@ -97,7 +99,7 @@ export default function LandingPage() {
           <h1 className="hero-title">
             {user ? (
               <>
-                Welcome back, {user.email ? user.email.split('@')[0] : 'User'}!
+                Welcome back, @{user.username}!
                 <span className="hero-subtitle">Ready to find your next home?</span>
               </>
             ) : (

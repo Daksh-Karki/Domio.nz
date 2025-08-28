@@ -1,45 +1,47 @@
 import React, { useState, useEffect } from 'react';
-import { User, Mail, Calendar, Phone, Home, ImageUp, Sparkles, Loader2, CheckCircle2 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { User, Mail, Phone, Camera, Shield, Edit3, AtSign, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext.jsx';
+import UserLayout from './UserLayout.jsx';
 import '../styles/Profile.css';
 
 const Profile = () => {
   const [profileData, setProfileData] = useState({
     firstName: '',
     lastName: '',
+    username: '',
     email: '',
     phone: '',
     role: '',
+    about: '',
   });
   const [isUpdating, setIsUpdating] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-  const [activeTab, setActiveTab] = useState('editProfile');
-  const [user, setUser] = useState(null);
+  const [profileImage, setProfileImage] = useState(null);
+  const [showImageModal, setShowImageModal] = useState(false);
   const navigate = useNavigate();
-
-  // Get Verified state
-  const [documentFile, setDocumentFile] = useState(null);
-  const [verificationStatus, setVerificationStatus] = useState('pending'); // pending, processing, verified
+  const { user } = useAuth();
 
   // Load user data on component mount
   useEffect(() => {
-    // Simulate loading user data
-    setTimeout(() => {
-      setUser({ email: "user@example.com", uid: "mock-user-id" });
+    if (user) {
       setProfileData({
-        firstName: 'John',
-        lastName: 'Doe',
-        email: 'user@example.com',
-        phone: '+64 21 123 4567',
-        role: 'Tenant',
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        username: user.username || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        role: user.role || '',
+        about: user.about || 'I am a responsible tenant looking for a comfortable place to call home. I enjoy a quiet environment and take good care of properties.',
       });
-      setVerificationStatus('verified');
       setIsLoading(false);
-    }, 1000);
-  }, [navigate]);
+    } else {
+      // If no user, redirect to login
+      navigate('/login');
+    }
+  }, [user, navigate]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -61,168 +63,251 @@ const Profile = () => {
     }, 1000);
   };
 
-  const handleRefreshProfile = () => {
-    if (!user) return;
-    
-    setIsLoading(true);
-    setMessage('');
-    setError('');
-    
-    // Simulate profile refresh
-    setTimeout(() => {
-      setMessage('Profile refreshed successfully!');
-      setIsLoading(false);
-    }, 1000);
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => setProfileImage(e.target.result);
+      reader.readAsDataURL(file);
+    }
   };
 
+  const handleImageClick = () => {
+    if (profileImage) {
+      setShowImageModal(true);
+    }
+  };
 
-
-
-
-
+  const closeImageModal = () => {
+    setShowImageModal(false);
+  };
 
   // Show loading state
   if (isLoading) {
     return (
-      <div style={{ 
-        display: "flex", 
-        justifyContent: "center", 
-        alignItems: "center", 
-        height: "100vh",
-        fontSize: "1.2rem"
-      }}>
-        <Loader2 className="animate-spin mr-2" />
-        Loading profile...
-      </div>
+      <UserLayout title="Profile" subtitle="Loading your profile...">
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <p>Loading your profile...</p>
+        </div>
+      </UserLayout>
     );
   }
 
   return (
-    <div className="profile-fullscreen">
-      <div className="profile-wrapper">
-        {/* Sidebar */}
-        <aside className="profile-sidebar">
-          <button
-            className="sidebar-button active"
-          >
-            <User size={18} className="sidebar-icon" /> Edit Profile
-          </button>
-          <button
-            className="home-button"
-            onClick={() => window.location.href = '/dashboard'}
-          >
-            <Home size={18} className="sidebar-icon" /> Go to Dashboard
-          </button>
-        </aside>
-
-        {/* Main Content */}
-        <main className="profile-content">
-            <>
-              <div className="profile-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <h1>Your Profile</h1>
-                  <p>Basic account information from signup.</p>
-                </div>
-                <button
-                  onClick={handleRefreshProfile}
-                  style={{
-                    padding: "8px 16px",
-                    backgroundColor: "#007bff",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "5px",
-                    cursor: "pointer",
-                    fontSize: "0.9rem"
-                  }}
-                  disabled={isLoading}
-                >
-                  {isLoading ? 'Loading...' : 'Refresh Profile'}
-                </button>
+    <UserLayout 
+      title="Profile Settings" 
+      subtitle="Manage your account information and preferences"
+    >
+      <div className="profile-content-wrapper">
+        <div className="profile-grid">
+          {/* Left Column - Profile Picture */}
+          <div className="profile-picture-section">
+            <div className="picture-container">
+              <div 
+                className={`profile-picture-wrapper ${profileImage ? 'clickable' : ''}`}
+                onClick={handleImageClick}
+              >
+                {profileImage ? (
+                  <img src={profileImage} alt="Profile" className="profile-picture" />
+                ) : (
+                  <div className="profile-placeholder">
+                    <User size={48} />
+                  </div>
+                )}
+                {!profileImage && (
+                  <label className="upload-overlay">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      style={{ display: 'none' }}
+                    />
+                    <Camera size={24} />
+                  </label>
+                )}
               </div>
+              <button
+                className="change-photo-btn"
+                onClick={() => document.querySelector('input[type="file"]').click()}
+              >
+                Change Photo
+              </button>
+            </div>
+            
+            {/* Account Status */}
+            <div className="account-status">
+              <div className="status-item">
+                <Shield size={16} />
+                <span>Account Status</span>
+                <div className="status-badge verified">Verified</div>
+              </div>
+            </div>
+          </div>
 
-              {message && <motion.div className="status-message success">{message}</motion.div>}
-              {error && <motion.div className="status-message error">{error}</motion.div>}
+          {/* Right Column - Form */}
+          <div className="profile-form-section">
+            <div className="form-container">
+              <h2>Personal Information</h2>
+              
+              {message && (
+                <div className="success-message">
+                  {message}
+                </div>
+              )}
+              {error && (
+                <div className="error-message">
+                  {error}
+                </div>
+              )}
 
               <form onSubmit={handleSaveChanges} className="profile-form">
-                <div className="grid-two-columns">
-                  <div className="input-wrapper">
-                    <User className="input-icon" size={18} />
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="firstName">First Name</label>
                     <input
                       type="text"
+                      id="firstName"
                       name="firstName"
-                      placeholder="First Name"
                       value={profileData.firstName}
                       onChange={handleInputChange}
-                      className="text-input"
+                      className="form-input"
+                      placeholder="Enter your first name"
                     />
                   </div>
-                  <div className="input-wrapper">
-                    <User className="input-icon" size={18} />
+                  <div className="form-group">
+                    <label htmlFor="lastName">Last Name</label>
                     <input
                       type="text"
+                      id="lastName"
                       name="lastName"
-                      placeholder="Last Name"
                       value={profileData.lastName}
                       onChange={handleInputChange}
-                      className="text-input"
+                      className="form-input"
+                      placeholder="Enter your last name"
                     />
                   </div>
                 </div>
 
-                <div className="input-wrapper">
-                  <Mail className="input-icon" size={18} />
+                <div className="form-group">
+                  <label htmlFor="username">
+                    <AtSign size={16} className="label-icon" />
+                    Username
+                  </label>
+                  <input
+                    type="text"
+                    id="username"
+                    name="username"
+                    value={profileData.username}
+                    onChange={handleInputChange}
+                    className="form-input"
+                    placeholder="Enter your username"
+                  />
+                  <small className="form-help">This will be your unique identifier on the platform</small>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="email">Email Address</label>
                   <input
                     type="email"
+                    id="email"
                     name="email"
-                    placeholder="Email"
                     value={profileData.email}
                     disabled
-                    className="text-input disabled-input"
+                    className="form-input disabled"
+                    placeholder="Your email address"
                   />
+                  <small className="form-help">Email cannot be changed</small>
                 </div>
 
-                <div className="input-wrapper">
-                  <Phone className="input-icon" size={18} />
+                <div className="form-group">
+                  <label htmlFor="phone">Phone Number</label>
                   <input
                     type="tel"
+                    id="phone"
                     name="phone"
-                    placeholder="Phone Number"
                     value={profileData.phone}
                     onChange={handleInputChange}
-                    className="text-input"
+                    className="form-input"
+                    placeholder="Enter your phone number"
                   />
                 </div>
 
-                <div className="input-wrapper">
-                  <User className="input-icon" size={18} />
-                  <select
+                <div className="form-group">
+                  <label htmlFor="role">Account Type</label>
+                  <input
+                    type="text"
+                    id="role"
                     name="role"
                     value={profileData.role}
-                    onChange={handleInputChange}
-                    className="text-input"
-                  >
-                    <option value="">Select Role</option>
-                    <option value="Tenant">Tenant</option>
-                    <option value="Landlord">Landlord</option>
-                    <option value="Both">Both</option>
-                  </select>
+                    disabled
+                    className="form-input disabled"
+                    placeholder="Your account type"
+                  />
+                  <small className="form-help">Account type cannot be changed</small>
                 </div>
 
-                <button type="submit" className="save-button" disabled={isUpdating}>
-                  {isUpdating ? (
-                    <div className="flex-center">
-                      <Loader2 className="animate-spin mr-2" /> Saving...
-                    </div>
-                  ) : (
-                    'Save Changes'
-                  )}
-                </button>
-              </form>
+                <div className="form-group">
+                  <label htmlFor="about">
+                    <Edit3 size={16} className="label-icon" />
+                    About Me
+                  </label>
+                  <textarea
+                    id="about"
+                    name="about"
+                    value={profileData.about}
+                    onChange={handleInputChange}
+                    className="form-textarea"
+                    placeholder="Tell us about yourself, your preferences, lifestyle, or anything else you'd like landlords to know..."
+                    rows={6}
+                  />
+                  <small className="form-help">This information helps landlords understand you better</small>
+                </div>
 
-            </>
-        </main>
+                <div className="form-actions">
+                  <button 
+                    type="submit" 
+                    className="save-button" 
+                    disabled={isUpdating}
+                  >
+                    {isUpdating ? 'Saving...' : 'Save Changes'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        {/* Image Preview Modal */}
+        {showImageModal && (
+          <div className="image-modal-overlay" onClick={closeImageModal}>
+            <div className="image-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h3>Profile Picture</h3>
+                <button className="close-modal-btn" onClick={closeImageModal}>
+                  <X size={20} />
+                </button>
+              </div>
+              <div className="modal-content">
+                <img src={profileImage} alt="Profile" className="modal-image" />
+              </div>
+              <div className="modal-actions">
+                <button
+                  className="upload-new-btn"
+                  onClick={() => {
+                    document.querySelector('input[type="file"]').click();
+                    closeImageModal();
+                  }}
+                >
+                  <Camera size={16} />
+                  Upload New Photo
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
-    </div>
+    </UserLayout>
   );
 };
 

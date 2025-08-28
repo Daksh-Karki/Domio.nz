@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext.jsx";
 import "../styles/Login.css";
 import { useNavigate } from "react-router-dom";
 import p2 from "../assets/p2.jpg";
@@ -11,6 +12,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -19,6 +21,15 @@ export default function Login() {
 
     // Simulate login (no actual authentication)
     setTimeout(() => {
+      const userData = {
+        firstName: "John",
+        lastName: "Doe",
+        email: email,
+        phone: "+64 21 123 4567",
+        role: "Tenant"
+      };
+      
+      login(userData);
       setStatus("Login successful. Redirecting to home...");
       setTimeout(() => {
         navigate("/");
@@ -33,6 +44,15 @@ export default function Login() {
 
     // Simulate Google login
     setTimeout(() => {
+      const userData = {
+        firstName: "John",
+        lastName: "Doe",
+        email: "john.doe@gmail.com",
+        phone: "+64 21 123 4567",
+        role: "Tenant"
+      };
+      
+      login(userData);
       setStatus("Google login successful. Redirecting to home...");
       setTimeout(() => {
         navigate("/");

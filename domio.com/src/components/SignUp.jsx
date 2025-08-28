@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "../styles/SignUp.css";
 import p3 from "../assets/p3.jpg";
+import { useAuth } from "../context/AuthContext";
 
 export default function SignUp() {
   const [step, setStep] = useState(1);
@@ -23,6 +24,7 @@ export default function SignUp() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
   const navigate = useNavigate();
+  const { signup } = useAuth();
 
   const roles = ["Tenant", "Landlord"];
 
@@ -97,9 +99,18 @@ export default function SignUp() {
 
     // Simulate signup (no actual authentication)
     setTimeout(() => {
+      const userData = {
+        firstName,
+        lastName,
+        email,
+        phone,
+        role
+      };
+      
+      signup(userData);
       setFieldErrors({ general: "Account created successfully! Redirecting..." });
       setTimeout(() => {
-        navigate("/dashboard");
+        navigate("/");
       }, 1500);
       setLoading(false);
     }, 1000);
@@ -111,6 +122,15 @@ export default function SignUp() {
 
     // Simulate Google signup
     setTimeout(() => {
+      const userData = {
+        firstName: "John",
+        lastName: "Doe",
+        email: "john.doe@gmail.com",
+        phone: "+64 21 123 4567",
+        role: "Tenant"
+      };
+      
+      signup(userData);
       setFieldErrors({ general: "Google signup successful! Redirecting..." });
       setTimeout(() => {
         navigate("/");
