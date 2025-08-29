@@ -8,15 +8,7 @@ export default function LandingPage() {
   const { user, logout, loading } = useAuth();
   const navigate = useNavigate();
 
-  // Debug logging
-  useEffect(() => {
-    console.log('LandingPage: Component mounted/updated');
-    console.log('LandingPage: Current user state:', user);
-    console.log('LandingPage: Loading state:', loading);
-  }, [user, loading]);
-
   const handleSignOut = () => {
-    console.log('LandingPage: Sign out clicked');
     logout();
     // Force a page reload to ensure clean state
     window.location.href = '/';
@@ -35,32 +27,10 @@ export default function LandingPage() {
   if (loading) {
     return (
       <div className="landing-page">
-        <div className="loading-container" style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          height: '100vh',
-          fontSize: '18px',
-          color: '#666'
-        }}>
-          <div className="loading-spinner" style={{
-            width: '40px',
-            height: '40px',
-            border: '4px solid #f3f3f3',
-            borderTop: '4px solid #3498db',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite',
-            marginBottom: '20px'
-          }}></div>
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
           <p>Initializing...</p>
         </div>
-        <style>{`
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-        `}</style>
       </div>
     );
   }

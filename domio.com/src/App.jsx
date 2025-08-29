@@ -10,24 +10,27 @@ import Dashboard from "./components/Dashboard.jsx";
 import Profile from "./components/Profile.jsx";
 import MyProperties from "./components/MyProperties.jsx";
 import Applications from "./components/Applications.jsx";
+import ErrorBoundary from "./components/ErrorBoundary.jsx";
 import "./styles/Login.css";  // your theme CSS
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/signup" element={<SignUp />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/my-properties" element={<MyProperties />} />
-          <Route path="/applications" element={<Applications />} />
-        </Routes>
-      </Router>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <Router>
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/signup" element={<SignUp />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/my-properties" element={<MyProperties />} />
+            <Route path="/applications" element={<Applications />} />
+          </Routes>
+        </Router>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 
