@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { signUpWithEmail, signInWithGoogle } from "../firebase/auth.js";
 import "../styles/SignUp.css";
 import p3 from "../assets/p3.jpg";
 import { useAuth } from "../context/AuthContext";
@@ -10,6 +11,7 @@ export default function SignUp() {
   // Step 1
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [username, setUsername] = useState("");
   const [phone, setPhone] = useState("");
 
   // Step 2
@@ -19,12 +21,19 @@ export default function SignUp() {
   const [showPassword, setShowPassword] = useState(false);
 
   // General
-  const [role, setRole] = useState("Landlord");
+  const [role, setRole] = useState("Tenant");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
   const navigate = useNavigate();
-  const { signup } = useAuth();
+  const { user } = useAuth();
+
+  // Redirect if user is already logged in
+  React.useEffect(() => {
+    if (user) {
+      navigate("/");
+    }
+  }, [user, navigate]);
 
   const roles = ["Tenant", "Landlord"];
 
@@ -61,7 +70,14 @@ export default function SignUp() {
     const errors = {};
     if (!firstName.trim()) errors.firstName = "First name is required";
     if (!lastName.trim()) errors.lastName = "Last name is required";
+    if (!username.trim()) errors.username = "Username is required";
     if (!phone.trim()) errors.phone = "Phone number is required";
+    
+    // Username validation
+    if (username.trim() && !/^[a-zA-Z0-9_]{3,20}$/.test(username.trim())) {
+      errors.username = "Username must be 3-20 characters, letters, numbers, and underscores only";
+    }
+    
     return errors;
   };
 
@@ -87,7 +103,7 @@ export default function SignUp() {
     nextStep();
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const errors = validateStep2();
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
@@ -97,46 +113,54 @@ export default function SignUp() {
     setLoading(true);
     setFieldErrors({});
 
-    // Simulate signup (no actual authentication)
-    setTimeout(() => {
+    try {
       const userData = {
         firstName,
         lastName,
+        username: username.trim().toLowerCase(),
         email,
         phone,
-        role
+        role: role.toLowerCase(),
+        about: 'I am a responsible tenant looking for a comfortable place to call home.'
       };
+
+      const result = await signUpWithEmail(email, password, userData);
       
-      signup(userData);
-      setFieldErrors({ general: "Account created successfully! Redirecting..." });
-      setTimeout(() => {
-        navigate("/");
-      }, 1500);
+      if (result.success) {
+        setFieldErrors({ general: "Account created successfully! Redirecting..." });
+        setTimeout(() => {
+          navigate("/");
+        }, 1500);
+      } else {
+        setFieldErrors({ general: `Signup failed: ${result.error}` });
+      }
+    } catch (error) {
+      setFieldErrors({ general: `An error occurred: ${error.message}` });
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   const handleGoogleSignUp = async () => {
     setGoogleLoading(true);
     setFieldErrors({});
 
-    // Simulate Google signup
-    setTimeout(() => {
-      const userData = {
-        firstName: "John",
-        lastName: "Doe",
-        email: "john.doe@gmail.com",
-        phone: "+64 21 123 4567",
-        role: "Tenant"
-      };
+    try {
+      const result = await signInWithGoogle();
       
-      signup(userData);
-      setFieldErrors({ general: "Google signup successful! Redirecting..." });
-      setTimeout(() => {
-        navigate("/");
-      }, 1500);
+      if (result.success) {
+        setFieldErrors({ general: "Google signup successful! Redirecting..." });
+        setTimeout(() => {
+          navigate("/");
+        }, 1500);
+      } else {
+        setFieldErrors({ general: `Google signup failed: ${result.error}` });
+      }
+    } catch (error) {
+      setFieldErrors({ general: `An error occurred: ${error.message}` });
+    } finally {
       setGoogleLoading(false);
-    }, 1000);
+    }
   };
 
   return (
@@ -156,7 +180,7 @@ export default function SignUp() {
         >
           ×
         </button>
-        <div className="brand">DOMIIO.NZ</div>
+        <div className="brand">DOMIO.NZ</div>
         <div className="subtitle">Join us today!</div>
 
         <h2 style={{ fontWeight: "bold", marginBottom: "20px", fontSize: "1.25rem" }}>
@@ -218,6 +242,17 @@ export default function SignUp() {
                 />
                 {fieldErrors.lastName && <span className="field-error">{fieldErrors.lastName}</span>}
               </div>
+            </div>
+
+            <div className="input-group">
+              <input
+                type="text"
+                placeholder="Username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+              />
+              {fieldErrors.username && <span className="field-error">{fieldErrors.username}</span>}
             </div>
 
             <div className="input-group">

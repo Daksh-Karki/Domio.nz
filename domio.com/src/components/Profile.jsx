@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { User, Mail, Phone, Camera, Shield, Edit3, AtSign, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
+import { getUserDocument, updateUserDocument } from '../firebase/auth.js';
+import { uploadProfileImage, getProfileImageURL, deleteProfileImage } from '../firebase/storageService.js';
 import UserLayout from './UserLayout.jsx';
 import '../styles/Profile.css';
 
@@ -21,27 +23,79 @@ const Profile = () => {
   const [error, setError] = useState('');
   const [profileImage, setProfileImage] = useState(null);
   const [showImageModal, setShowImageModal] = useState(false);
+  const [isImageUploading, setIsImageUploading] = useState(false);
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
-  // Load user data on component mount
+  // Load user data and profile image on component mount
   useEffect(() => {
     if (user) {
-      setProfileData({
+      const profileDataToSet = {
         firstName: user.firstName || '',
         lastName: user.lastName || '',
         username: user.username || '',
         email: user.email || '',
         phone: user.phone || '',
         role: user.role || '',
-        about: user.about || 'I am a responsible tenant looking for a comfortable place to call home. I enjoy a quiet environment and take good care of properties.',
-      });
+        about: user.about || 'I am a responsible tenant looking for a comfortable place to call home.',
+      };
+      setProfileData(profileDataToSet);
+      
+      // Load profile image from Firebase Storage
+      loadProfileImage();
       setIsLoading(false);
     } else {
-      // If no user, redirect to login
       navigate('/login');
     }
   }, [user, navigate]);
+
+  // Load profile image from Firebase Storage
+  const loadProfileImage = async () => {
+    if (!user?.uid) return;
+    
+    try {
+      const result = await getProfileImageURL(user.uid);
+      if (result.success && result.url) {
+        setProfileImage(result.url);
+      }
+    } catch (error) {
+      console.error('Error loading profile image:', error);
+    }
+  };
+
+  // Function to refresh user data from Firestore
+  const refreshUserData = async () => {
+    if (!user?.uid) return;
+    
+    try {
+      const userDoc = await getUserDocument(user.uid);
+      if (userDoc.success) {
+        const freshData = {
+          firstName: userDoc.data.firstName || '',
+          lastName: userDoc.data.lastName || '',
+          username: userDoc.data.username || '',
+          email: userDoc.data.email || '',
+          phone: userDoc.data.phone || '',
+          role: userDoc.data.role || '',
+          about: userDoc.data.about || '',
+        };
+        setProfileData(freshData);
+      }
+    } catch (error) {
+      console.error('Profile: Error refreshing user data:', error);
+    }
+  };
+
+  // Auto-clear success message after 3 seconds
+  useEffect(() => {
+    if (message) {
+      const timer = setTimeout(() => {
+        setMessage('');
+      }, 3000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [message]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -56,19 +110,61 @@ const Profile = () => {
     setMessage('');
     setError('');
 
-    // Simulate profile update
-    setTimeout(() => {
-      setMessage('Profile updated successfully!');
+    try {
+      const result = await updateUserDocument(user.uid, {
+        firstName: profileData.firstName,
+        lastName: profileData.lastName,
+        username: profileData.username,
+        phone: profileData.phone,
+        about: profileData.about
+      });
+
+      if (result.success) {
+        setMessage('Profile updated successfully!');
+        await refreshUserData();
+      } else {
+        setError(result.error || 'Failed to update profile');
+      }
+    } catch (error) {
+      setError('An error occurred while updating your profile');
+    } finally {
       setIsUpdating(false);
-    }, 1000);
+    }
   };
 
-  const handleImageUpload = (e) => {
+  const handleImageUpload = async (e) => {
     const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => setProfileImage(e.target.result);
-      reader.readAsDataURL(file);
+    if (!file || !user?.uid) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setError('Please select a valid image file');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Image size should be less than 5MB');
+      return;
+    }
+
+    setIsImageUploading(true);
+    setError('');
+
+    try {
+      // Upload image to Firebase Storage
+      const result = await uploadProfileImage(user.uid, file);
+      
+      if (result.success) {
+        setProfileImage(result.url);
+        setMessage('Profile image updated successfully!');
+      } else {
+        setError('Failed to upload image: ' + result.error);
+      }
+    } catch (error) {
+      setError('Error uploading image: ' + error.message);
+    } finally {
+      setIsImageUploading(false);
     }
   };
 
@@ -80,6 +176,11 @@ const Profile = () => {
 
   const closeImageModal = () => {
     setShowImageModal(false);
+  };
+
+  const handleLogout = () => {
+    logout();
+    window.location.href = '/';
   };
 
   // Show loading state
@@ -117,21 +218,32 @@ const Profile = () => {
                 )}
                 {!profileImage && (
                   <label className="upload-overlay">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                      style={{ display: 'none' }}
-                    />
                     <Camera size={24} />
                   </label>
                 )}
+                {isImageUploading && (
+                  <div className="upload-overlay uploading">
+                    <div className="upload-spinner"></div>
+                    <span>Uploading...</span>
+                  </div>
+                )}
               </div>
+              
+              {/* Hidden file input - always accessible */}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                style={{ display: 'none' }}
+                id="profile-image-input"
+              />
+              
               <button
                 className="change-photo-btn"
-                onClick={() => document.querySelector('input[type="file"]').click()}
+                onClick={() => document.getElementById('profile-image-input').click()}
+                disabled={isImageUploading}
               >
-                Change Photo
+                {isImageUploading ? 'Uploading...' : 'Change Photo'}
               </button>
             </div>
             
@@ -295,7 +407,7 @@ const Profile = () => {
                 <button
                   className="upload-new-btn"
                   onClick={() => {
-                    document.querySelector('input[type="file"]').click();
+                    document.getElementById('profile-image-input').click();
                     closeImageModal();
                   }}
                 >

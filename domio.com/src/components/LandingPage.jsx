@@ -1,16 +1,25 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import "../styles/LandingPage.css";
 
 export default function LandingPage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { user, logout } = useAuth();
+  const { user, logout, loading } = useAuth();
   const navigate = useNavigate();
 
+  // Debug logging
+  useEffect(() => {
+    console.log('LandingPage: Component mounted/updated');
+    console.log('LandingPage: Current user state:', user);
+    console.log('LandingPage: Loading state:', loading);
+  }, [user, loading]);
+
   const handleSignOut = () => {
+    console.log('LandingPage: Sign out clicked');
     logout();
-    navigate("/");
+    // Force a page reload to ensure clean state
+    window.location.href = '/';
   };
 
   const featuredListings = [
@@ -21,6 +30,40 @@ export default function LandingPage() {
     { id: 5, title: "Executive Penthouse", location: "Viaduct Harbour", price: "$1,800/week", image: "🏙️", type: "Penthouse", bedrooms: 3, bathrooms: 3 },
     { id: 6, title: "Charming Cottage", location: "Ponsonby", price: "$720/week", image: "🏡", type: "Cottage", bedrooms: 2, bathrooms: 1 }
   ];
+
+  // Show loading state while Firebase auth is initializing
+  if (loading) {
+    return (
+      <div className="landing-page">
+        <div className="loading-container" style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: '100vh',
+          fontSize: '18px',
+          color: '#666'
+        }}>
+          <div className="loading-spinner" style={{
+            width: '40px',
+            height: '40px',
+            border: '4px solid #f3f3f3',
+            borderTop: '4px solid #3498db',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            marginBottom: '20px'
+          }}></div>
+          <p>Initializing...</p>
+        </div>
+        <style>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    );
+  }
 
   return (
     <div className="landing-page">
@@ -42,7 +85,7 @@ export default function LandingPage() {
       <nav className="navbar">
         <div className="nav-container">
           <div className="nav-logo">
-            <h1>DOMIIO.NZ</h1>
+            <h1>DOMIO.NZ</h1>
           </div>
 
           <div className={`nav-menu ${isMenuOpen ? 'active' : ''}`}>
@@ -190,7 +233,7 @@ export default function LandingPage() {
       <section className="how-it-works">
         <div className="container">
           <div className="section-header">
-            <h2>How DOMIIO.NZ Works</h2>
+            <h2>How DOMIO.NZ Works</h2>
             <p>Your journey to the perfect rental home in just four simple steps</p>
           </div>
 
@@ -248,7 +291,7 @@ export default function LandingPage() {
         <div className="container">
           <div className="cta-content">
             <h2>Ready to Find Your Perfect Home?</h2>
-            <p>Join over 75,000 happy tenants who have found their ideal rental property through DOMIIO.NZ</p>
+            <p>Join over 75,000 happy tenants who have found their ideal rental property through DOMIO.NZ</p>
             <div className="cta-buttons">
               {user ? (
                 <Link to="/properties" className="cta-btn primary">Browse Properties</Link>
@@ -266,7 +309,7 @@ export default function LandingPage() {
         <div className="container">
           <div className="footer-content">
             <div className="footer-section">
-              <h3>DOMIIO.NZ</h3>
+              <h3>DOMIO.NZ</h3>
               <p>Your trusted partner in finding the perfect rental property in New Zealand.</p>
             </div>
             <div className="footer-section">
@@ -295,7 +338,7 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="footer-bottom">
-            <p>&copy; 2024 DOMIIO.NZ. All rights reserved.</p>
+            <p>&copy; 2024 DOMIO.NZ. All rights reserved.</p>
           </div>
         </div>
       </footer>

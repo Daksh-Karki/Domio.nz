@@ -22,7 +22,8 @@ const UserLayout = ({ children, title, subtitle }) => {
 
   const handleLogout = () => {
     logout();
-    navigate('/');
+    // Force a page reload to ensure clean state
+    window.location.href = '/';
   };
 
   const navigationItems = [

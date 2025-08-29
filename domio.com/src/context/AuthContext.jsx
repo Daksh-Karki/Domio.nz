@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { onAuthStateChange, signOutUser, getUserDocument } from '../firebase/auth.js';
 
 const AuthContext = createContext();
 
@@ -14,47 +15,70 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Check if user is logged in on app start
+  // Listen to Firebase auth state changes
   useEffect(() => {
-    const savedUser = localStorage.getItem('domio_user');
-    if (savedUser) {
-      try {
-        setUser(JSON.parse(savedUser));
-      } catch (error) {
-        console.error('Error parsing saved user:', error);
-        localStorage.removeItem('domio_user');
+    const unsubscribe = onAuthStateChange(async (firebaseUser) => {
+      if (firebaseUser) {
+        // Get additional user data from Firestore
+        try {
+          const userDoc = await getUserDocument(firebaseUser.uid);
+          if (userDoc.success) {
+            const userData = {
+              uid: firebaseUser.uid,
+              email: firebaseUser.email,
+              displayName: firebaseUser.displayName,
+              ...userDoc.data
+            };
+            setUser(userData);
+          } else {
+            // Fallback to basic Firebase user data
+            const fallbackUser = {
+              uid: firebaseUser.uid,
+              email: firebaseUser.email,
+              displayName: firebaseUser.displayName,
+              firstName: firebaseUser.displayName?.split(' ')[0] || '',
+              lastName: firebaseUser.displayName?.split(' ').slice(1).join(' ') || '',
+              username: firebaseUser.displayName?.replace(/\s+/g, '').toLowerCase() || '',
+              role: 'tenant'
+            };
+            setUser(fallbackUser);
+          }
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+          // Fallback to basic Firebase user data
+          const fallbackUser = {
+            uid: firebaseUser.uid,
+            email: firebaseUser.email,
+            displayName: firebaseUser.displayName,
+            firstName: firebaseUser.displayName?.split(' ')[0] || '',
+            lastName: firebaseUser.displayName?.split(' ').slice(1).join(' ') || '',
+            username: firebaseUser.displayName?.replace(/\s+/g, '').toLowerCase() || '',
+            role: 'tenant'
+          };
+          setUser(fallbackUser);
+        }
+      } else {
+        setUser(null);
       }
-    }
-    setLoading(false);
+      setLoading(false);
+    });
+
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
-  const login = (userData) => {
-    const userWithUsername = {
-      ...userData,
-      username: userData.firstName?.toLowerCase() + userData.lastName?.toLowerCase() || 'user'
-    };
-    setUser(userWithUsername);
-    localStorage.setItem('domio_user', JSON.stringify(userWithUsername));
-  };
-
-  const signup = (userData) => {
-    const userWithUsername = {
-      ...userData,
-      username: userData.firstName?.toLowerCase() + userData.lastName?.toLowerCase() || 'user'
-    };
-    setUser(userWithUsername);
-    localStorage.setItem('domio_user', JSON.stringify(userWithUsername));
-  };
-
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('domio_user');
+  const logout = async () => {
+    try {
+      await signOutUser();
+      setUser(null);
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
   };
 
   const value = {
     user,
-    login,
-    signup,
     logout,
     loading
   };

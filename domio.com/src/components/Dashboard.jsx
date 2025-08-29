@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus, Home, DollarSign, Wrench, Users } from "lucide-react";
 import "../styles/Login.css"; // Reusing styles for now
+import { useAuth } from "../context/AuthContext";
 
 export default function Dashboard() {
   const [user, setUser] = useState(null);
@@ -19,6 +20,7 @@ export default function Dashboard() {
     rent: ''
   });
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   useEffect(() => {
     // Simulate user login and load mock data
@@ -45,8 +47,9 @@ export default function Dashboard() {
   };
 
   const handleLogout = () => {
-    setUser(null);
-    navigate("/login");
+    logout();
+    // Force a page reload to ensure clean state
+    window.location.href = '/';
   };
 
   const handleAddProperty = async (e) => {
@@ -103,7 +106,7 @@ export default function Dashboard() {
         borderRadius: "10px"
       }}>
         <div>
-          <h1 style={{ margin: 0, color: "#333" }}>Welcome to DOMIIO.NZ</h1>
+          <h1 style={{ margin: 0, color: "#333" }}>Welcome to DOMIO.NZ</h1>
           <p style={{ margin: "5px 0 0 0", color: "#666" }}>
             Logged in as: {user?.email}
           </p>

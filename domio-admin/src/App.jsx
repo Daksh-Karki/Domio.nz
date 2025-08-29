@@ -74,7 +74,7 @@ function Login() {
 
   return (
     <div style={{maxWidth:420, margin:'80px auto', padding:24, border:'1px solid #e5e7eb', borderRadius:12}}>
-      <h2>DOMIIO.NZ Admin</h2>
+              <h2>DOMIO.NZ Admin</h2>
       <p>Admin access only. Sign in with admin account.</p>
       <form onSubmit={handleLogin}>
         <input type="email" placeholder="email" value={email} onChange={(e)=>setEmail(e.target.value)} style={{width:'100%',padding:10,marginBottom:10}} />

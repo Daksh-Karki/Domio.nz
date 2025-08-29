@@ -43,7 +43,7 @@ export default function ForgotPassword() {
         >
           ×
         </button>
-        <div className="brand">DOMIIO.NZ</div>
+        <div className="brand">DOMIO.NZ</div>
         <div className="subtitle">Reset your password</div>
 
         <h2 style={{ fontWeight: "bold", marginBottom: "20px", fontSize: "1.25rem" }}>

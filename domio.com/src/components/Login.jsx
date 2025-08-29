@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
+import { signInWithEmail, signInWithGoogle } from "../firebase/auth.js";
 import "../styles/Login.css";
 import { useNavigate } from "react-router-dom";
 import p2 from "../assets/p2.jpg";
@@ -12,53 +13,58 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { user } = useAuth();
+
+  // Redirect if user is already logged in
+  React.useEffect(() => {
+    if (user) {
+      navigate("/");
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setStatus("");
 
-    // Simulate login (no actual authentication)
-    setTimeout(() => {
-      const userData = {
-        firstName: "John",
-        lastName: "Doe",
-        email: email,
-        phone: "+64 21 123 4567",
-        role: "Tenant"
-      };
+    try {
+      const result = await signInWithEmail(email, password);
       
-      login(userData);
-      setStatus("Login successful. Redirecting to home...");
-      setTimeout(() => {
-        navigate("/");
-      }, 1000);
+      if (result.success) {
+        setStatus("Login successful. Redirecting to home...");
+        setTimeout(() => {
+          navigate("/");
+        }, 1000);
+      } else {
+        setStatus(`Login failed: ${result.error}`);
+      }
+    } catch (error) {
+      setStatus(`An error occurred: ${error.message}`);
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
     setStatus("");
 
-    // Simulate Google login
-    setTimeout(() => {
-      const userData = {
-        firstName: "John",
-        lastName: "Doe",
-        email: "john.doe@gmail.com",
-        phone: "+64 21 123 4567",
-        role: "Tenant"
-      };
+    try {
+      const result = await signInWithGoogle();
       
-      login(userData);
-      setStatus("Google login successful. Redirecting to home...");
-      setTimeout(() => {
-        navigate("/");
-      }, 1000);
+      if (result.success) {
+        setStatus("Google login successful. Redirecting to home...");
+        setTimeout(() => {
+          navigate("/");
+        }, 1000);
+      } else {
+        setStatus(`Google login failed: ${result.error}`);
+      }
+    } catch (error) {
+      setStatus(`An error occurred: ${error.message}`);
+    } finally {
       setGoogleLoading(false);
-    }, 1000);
+    }
   };
 
   return (
@@ -78,7 +84,7 @@ export default function Login() {
         >
           ×
         </button>
-        <div className="brand">DOMIIO.NZ</div>
+        <div className="brand">DOMIO.NZ</div>
         <div className="subtitle">Welcome back!</div>
 
         <h2 style={{ fontWeight: "bold", marginBottom: "20px", fontSize: "1.25rem" }}>
