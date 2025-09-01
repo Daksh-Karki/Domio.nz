@@ -3,7 +3,7 @@ import { User, Mail, Phone, Camera, Shield, Edit3, AtSign, X, FileText, Upload, 
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { getUserDocument, updateUserDocument } from '../firebase/auth.js';
-import { uploadProfileImage, getProfileImageURL, deleteDocument } from '../firebase/storageService.js';
+import { uploadProfileImage, getProfileImageURL, deleteDocument, uploadDocument, getUserDocuments } from '../firebase/storageService.js';
 import UserLayout from './UserLayout.jsx';
 import '../styles/Profile.css';
 
@@ -98,9 +98,9 @@ const Profile = () => {
     if (!user?.uid) return;
 
     try {
-      const userDocs = await getUserDocument(user.uid);
-      if (userDocs.success && userDocs.data.documents) {
-        setDocuments(userDocs.data.documents);
+      const result = await getUserDocuments(user.uid);
+      if (result.success) {
+        setDocuments(result.documents);
       }
     } catch (error) {
       console.error('Error loading documents:', error);
@@ -248,19 +248,20 @@ const Profile = () => {
 
     try {
       // Upload document to Firebase Storage
-      const result = await uploadProfileImage(user.uid, file); // Assuming uploadProfileImage handles both images and documents
+      const result = await uploadDocument(user.uid, file, selectedDocumentType);
       
       if (result.success) {
         const newDocument = {
-          fileName: file.name,
-          originalName: file.name,
-          documentType: selectedDocumentType,
-          size: file.size,
+          fileName: result.fileName,
+          originalName: result.fileName,
+          documentType: result.documentType,
+          size: result.size,
           url: result.url,
-          timestamp: new Date().toISOString(),
+          timestamp: new Date(result.timestamp).toISOString(),
         };
         setDocuments(prev => [...prev, newDocument]);
         setMessage('Document uploaded successfully!');
+        setShowUploadModal(false);
       } else {
         setError('Failed to upload document: ' + result.error);
       }
