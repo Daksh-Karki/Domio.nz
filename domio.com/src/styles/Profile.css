@@ -1014,14 +1014,6 @@
   min-height: 36px;
 }
 
-.action-btn {
-  min-width: 32px;
-  min-height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .icon-symbol {
   font-size: 18px;
   line-height: 1;
