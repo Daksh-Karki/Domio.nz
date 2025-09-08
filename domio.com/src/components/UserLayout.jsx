@@ -10,7 +10,10 @@ import {
   LogOut, 
   Menu,
   X,
-  ArrowLeft
+  ArrowLeft,
+  Wrench,
+  DollarSign,
+  Users
 } from 'lucide-react';
 import '../styles/UserLayout.css';
 
@@ -26,7 +29,9 @@ const UserLayout = ({ children, title, subtitle }) => {
     window.location.href = '/';
   };
 
-  const navigationItems = [
+  const isLandlord = user?.role?.toLowerCase() === 'landlord';
+  
+  const tenantNavigationItems = [
     {
       name: 'Dashboard',
       icon: Home,
@@ -58,6 +63,53 @@ const UserLayout = ({ children, title, subtitle }) => {
       description: 'Account and privacy settings'
     }
   ];
+
+  const landlordNavigationItems = [
+    {
+      name: 'Dashboard',
+      icon: Home,
+      path: '/dashboard',
+      description: 'Overview of your properties and tenants'
+    },
+    {
+      name: 'Profile',
+      icon: User,
+      path: '/profile',
+      description: 'Manage your personal information'
+    },
+    {
+      name: 'Properties',
+      icon: Building2,
+      path: '/landlord/properties',
+      description: 'Manage your rental properties'
+    },
+    {
+      name: 'Applications',
+      icon: FileText,
+      path: '/landlord/applications',
+      description: 'Review tenant applications'
+    },
+    {
+      name: 'Maintenance',
+      icon: Wrench,
+      path: '/landlord/maintenance',
+      description: 'Manage maintenance requests'
+    },
+    {
+      name: 'Financials',
+      icon: DollarSign,
+      path: '/landlord/financials',
+      description: 'Track income and expenses'
+    },
+    {
+      name: 'Settings',
+      icon: Settings,
+      path: '/settings',
+      description: 'Account and privacy settings'
+    }
+  ];
+
+  const navigationItems = isLandlord ? landlordNavigationItems : tenantNavigationItems;
 
   const currentPath = location.pathname;
 
