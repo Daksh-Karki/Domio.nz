@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { signUpWithEmail, signInWithGoogle } from "../firebase/auth.js";
-import "../styles/SignUp.css";
+import "../styles/SignUP.css";
 import p3 from "../assets/p3.jpg";
 import { useAuth } from "../context/AuthContext";
 
