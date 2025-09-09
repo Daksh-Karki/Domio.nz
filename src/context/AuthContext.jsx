@@ -17,7 +17,11 @@ export const AuthProvider = ({ children }) => {
 
   // Listen to Firebase auth state changes
   useEffect(() => {
+    console.log('AuthContext: Initializing auth state listener');
+    
     const unsubscribe = onAuthStateChange(async (firebaseUser) => {
+      console.log('AuthContext: Auth state changed', firebaseUser ? 'User logged in' : 'User logged out');
+      
       if (firebaseUser) {
         // Get additional user data from Firestore
         try {
@@ -29,6 +33,7 @@ export const AuthProvider = ({ children }) => {
               displayName: firebaseUser.displayName,
               ...userDoc.data
             };
+            console.log('AuthContext: User data loaded from Firestore', userData);
             setUser(userData);
           } else {
             // Fallback to basic Firebase user data
@@ -41,10 +46,11 @@ export const AuthProvider = ({ children }) => {
               username: firebaseUser.displayName?.replace(/\s+/g, '').toLowerCase() || '',
               role: 'tenant'
             };
+            console.log('AuthContext: Using fallback user data', fallbackUser);
             setUser(fallbackUser);
           }
         } catch (error) {
-          console.error('Error fetching user data:', error);
+          console.error('AuthContext: Error fetching user data:', error);
           // Fallback to basic Firebase user data
           const fallbackUser = {
             uid: firebaseUser.uid,
@@ -55,15 +61,18 @@ export const AuthProvider = ({ children }) => {
             username: firebaseUser.displayName?.replace(/\s+/g, '').toLowerCase() || '',
             role: 'tenant'
           };
+          console.log('AuthContext: Using fallback user data after error', fallbackUser);
           setUser(fallbackUser);
         }
       } else {
+        console.log('AuthContext: No user, setting user to null');
         setUser(null);
       }
       setLoading(false);
     });
 
     return () => {
+      console.log('AuthContext: Cleaning up auth listener');
       unsubscribe();
     };
   }, []);
