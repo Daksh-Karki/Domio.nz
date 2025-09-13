@@ -138,15 +138,15 @@ export default function Login() {
             />
           </div>
 
-          <div className="form-options" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-            <label className="remember-me" style={{ display: "flex", alignItems: "center" }}>
-              <input type="checkbox" style={{ marginRight: "8px" }} />
-              <span>Remember me</span>
-            </label>
-            <Link to="/forgot-password" style={{ color: "#6366f1", textDecoration: "none" }}>
-              Forgot password?
-            </Link>
-          </div>
+                <div className="form-options">
+        <div className="remember-me-wrapper">
+          <input type="checkbox" id="remember" />
+          <label htmlFor="remember" className="checkbox-label">Remember me</label>
+        </div>
+        <Link to="/forgot-password" className="forgot-password-link"> {/* Added className for potential styling */}
+          Forgot password?
+        </Link>
+      </div>
 
           <button type="submit" className="login-btn" disabled={loading}>
             {loading ? "Signing in..." : "Sign In"}
