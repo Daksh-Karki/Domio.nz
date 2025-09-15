@@ -114,6 +114,7 @@ body {
   background-repeat: no-repeat;
   z-index: 2;
   animation: fadeIn 4s ease-in-out;
+  filter: blur(5);
 }
 
 /* Overlay for better text readability */
