@@ -19,7 +19,7 @@ import {
   CreditCard,
   Banknote
 } from 'lucide-react';
-import '../styles/Applications.css';
+import '../styles/shared.css';
 
 const LandlordFinancials = () => {
   const { user } = useAuth();

@@ -150,14 +150,10 @@ body {
   align-items: center;
 }
 
-.nav-logo h1 {
-  color: #1e293b;
-  font-size: 1.8rem;
-  font-weight: 700;
-  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+.logo-image {
+  height: 50px;
+  width: auto;
+  object-fit: contain;
 }
 
 .nav-menu {

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
 import UserLayout from './UserLayout.jsx';
 import { FileText, Clock, CheckCircle, XCircle, AlertCircle, Building2, MapPin, DollarSign } from 'lucide-react';
-import '../styles/Applications.css';
+import '../styles/shared.css';
 
 const Applications = () => {
   const { user } = useAuth();
@@ -105,7 +105,9 @@ const Applications = () => {
     return (
       <UserLayout title="Applications" subtitle="Loading your applications...">
         <div className="loading-container">
-          <div className="loading-spinner"></div>
+          <div className="loading-logo">
+            <img src="/src/assets/Logo.png" alt="Domio.nz Logo" />
+          </div>
           <p>Loading your applications...</p>
         </div>
       </UserLayout>

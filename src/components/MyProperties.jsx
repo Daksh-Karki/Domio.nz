@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
 import UserLayout from './UserLayout.jsx';
 import { Building2, MapPin, Bed, Bath, DollarSign, Edit, Trash2, Plus } from 'lucide-react';
-import '../styles/MyProperties.css';
+import '../styles/shared.css';
 
 const MyProperties = () => {
   const { user } = useAuth();
@@ -74,7 +74,9 @@ const MyProperties = () => {
     return (
       <UserLayout title="My Properties" subtitle="Loading your properties...">
         <div className="loading-container">
-          <div className="loading-spinner"></div>
+          <div className="loading-logo">
+            <img src="/src/assets/Logo.png" alt="Domio.nz Logo" />
+          </div>
           <p>Loading your properties...</p>
         </div>
       </UserLayout>

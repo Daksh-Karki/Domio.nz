@@ -3,21 +3,26 @@ import { useNavigate } from "react-router-dom";
 import { Plus, Home, DollarSign, Wrench, Users, Building2, FileText, TrendingUp, Calendar, AlertCircle, CheckCircle, Clock, UserCheck, UserX } from "lucide-react";
 import UserLayout from "./UserLayout.jsx";
 import { useAuth } from "../context/AuthContext";
+import { getLandlordProperties, getPropertyStats } from "../firebase/propertyService.js";
 import "../styles/Dashboard.css";
 
 export default function Dashboard() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [properties, setProperties] = useState([]);
+  const [stats, setStats] = useState({});
   const [financialRecords, setFinancialRecords] = useState([]);
   const [maintenanceRequests, setMaintenanceRequests] = useState([]);
   const [applications, setApplications] = useState([]);
   const [tenantApplications, setTenantApplications] = useState([]);
   const [tenants, setTenants] = useState([]);
   const [showAddProperty, setShowAddProperty] = useState(false);
+  const [uploadingImages, setUploadingImages] = useState(false);
+  const [selectedImages, setSelectedImages] = useState([]);
   const [newProperty, setNewProperty] = useState({
-    name: '',
+    title: '',
     address: '',
+    city: '',
     type: 'apartment',
     bedrooms: 1,
     bathrooms: 1,
@@ -31,21 +36,47 @@ export default function Dashboard() {
     if (authUser) {
       setUser(authUser);
       loadDashboardData();
-      setLoading(false);
     }
   }, [authUser]);
 
+  useEffect(() => {
+    if (user) {
+      loadProperties();
+    }
+  }, [user]);
+
+  const loadProperties = async () => {
+    if (!user) return;
+    
+    try {
+      const isLandlord = user?.role?.toLowerCase() === 'landlord';
+      
+      if (isLandlord) {
+        // Load real property data for landlords
+        const result = await getLandlordProperties(user.uid);
+        if (result.success) {
+          setProperties(result.data);
+        }
+        
+        // Load property stats
+        const statsResult = await getPropertyStats(user.uid);
+        if (statsResult.success) {
+          setStats(statsResult.data);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading properties:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const loadDashboardData = () => {
-    // Load mock data based on user role
+    // Load mock data for other sections (applications, maintenance, etc.)
     const isLandlord = user?.role?.toLowerCase() === 'landlord';
     
     if (isLandlord) {
-      // Landlord data
-    setProperties([
-        { id: 1, name: "Downtown Apartment", address: "123 Queen St, Auckland", type: "apartment", bedrooms: 2, bathrooms: 1, rent: 650, status: "Rented", tenant: "John Smith" },
-        { id: 2, name: "Family House", address: "456 Main St, Auckland", type: "house", bedrooms: 4, bathrooms: 2, rent: 850, status: "Available" },
-        { id: 3, name: "Studio Unit", address: "789 Parnell Rd, Auckland", type: "studio", bedrooms: 1, bathrooms: 1, rent: 450, status: "Rented", tenant: "Sarah Johnson" }
-      ]);
+      // Landlord mock data for non-property sections
       setTenantApplications([
         { id: 1, propertyId: 2, propertyName: "Family House", applicantName: "Mike Wilson", applicantEmail: "mike@example.com", appliedDate: "2024-01-20", status: "Pending", income: 85000, references: 2 },
         { id: 2, propertyId: 2, propertyName: "Family House", applicantName: "Lisa Brown", applicantEmail: "lisa@example.com", appliedDate: "2024-01-18", status: "Under Review", income: 95000, references: 3 }
@@ -81,28 +112,60 @@ export default function Dashboard() {
     e.preventDefault();
     if (!user) return;
 
-    // Simulate adding property
-    const newProp = {
-      id: properties.length + 1,
-      ...newProperty,
-      rent: parseFloat(newProperty.rent) || 0,
-      status: "Available"
-    };
-    
-    setProperties([...properties, newProp]);
-    setShowAddProperty(false);
-    setNewProperty({
-      name: '',
-      address: '',
-      type: 'apartment',
-      bedrooms: 1,
-      bathrooms: 1,
-      rent: ''
-    });
+    try {
+      // Use the real Firebase service
+      const { createProperty } = await import('../firebase/propertyService.js');
+      const { uploadPropertyImages } = await import('../firebase/documentService.js');
+      
+      const propertyData = {
+        ...newProperty,
+        landlordId: user.uid,
+        rent: parseFloat(newProperty.rent) || 0,
+        status: 'available',
+        amenities: []
+      };
+      
+      const result = await createProperty(propertyData);
+      if (result.success) {
+        // Upload images if any were selected
+        if (selectedImages.length > 0) {
+          setUploadingImages(true);
+          try {
+            const uploadResult = await uploadPropertyImages(result.data.id, selectedImages, user.uid);
+            if (!uploadResult.success) {
+              console.error('Error uploading images:', uploadResult.error);
+            }
+          } catch (error) {
+            console.error('Error uploading images:', error);
+          } finally {
+            setUploadingImages(false);
+          }
+        }
+        
+        // Reload properties to show the new one
+        await loadProperties();
+        setShowAddProperty(false);
+        setNewProperty({
+          title: '',
+          address: '',
+          city: '',
+          type: 'apartment',
+          bedrooms: 1,
+          bathrooms: 1,
+          rent: ''
+        });
+        setSelectedImages([]);
+      } else {
+        alert('Error creating property: ' + result.error);
+      }
+    } catch (error) {
+      console.error('Error creating property:', error);
+      alert('Error creating property. Please try again.');
+    }
   };
 
   const getTotalRent = () => {
-    return properties.reduce((total, property) => total + (property.rent || 0), 0);
+    return stats.totalRent || 0;
   };
 
   const getStatusColor = (status) => {
@@ -144,15 +207,35 @@ export default function Dashboard() {
   };
 
   const getTotalMonthlyIncome = () => {
-    return properties
-      .filter(property => property.status === 'Rented')
-      .reduce((total, property) => total + (property.rent || 0), 0);
+    return stats.totalRent || 0;
   };
 
   const getOccupancyRate = () => {
-    if (properties.length === 0) return 0;
-    const rentedProperties = properties.filter(p => p.status === 'Rented').length;
-    return Math.round((rentedProperties / properties.length) * 100);
+    if (stats.total === 0) return 0;
+    return Math.round((stats.rented / stats.total) * 100);
+  };
+
+  const handleImageSelect = (e) => {
+    const files = Array.from(e.target.files);
+    const imageFiles = files.filter(file => file.type.startsWith('image/'));
+    
+    if (imageFiles.length > 10) {
+      alert('Maximum 10 images allowed');
+      return;
+    }
+    
+    // Check file sizes (max 5MB each)
+    const oversizedFiles = imageFiles.filter(file => file.size > 5 * 1024 * 1024);
+    if (oversizedFiles.length > 0) {
+      alert('Some files are too large. Maximum size is 5MB per image.');
+      return;
+    }
+    
+    setSelectedImages(prev => [...prev, ...imageFiles]);
+  };
+
+  const removeImage = (index) => {
+    setSelectedImages(prev => prev.filter((_, i) => i !== index));
   };
 
   // Show loading state
@@ -160,7 +243,9 @@ export default function Dashboard() {
     return (
       <div className="fullscreen-loading">
         <div className="loading-container">
-          <div className="loading-spinner"></div>
+          <div className="loading-logo">
+            <img src="/src/assets/Logo.png" alt="Domio.nz Logo" />
+          </div>
           <p>Loading your dashboard...</p>
           <div className="loading-dots">
             <span></span>
@@ -189,7 +274,7 @@ export default function Dashboard() {
               <Building2 size={32} />
             </div>
             <div className="stat-content">
-              <h3 className="stat-number">{properties.length}</h3>
+              <h3 className="stat-number">{stats.total || 0}</h3>
               <p className="stat-label">Total Properties</p>
             </div>
           </div>
@@ -309,9 +394,9 @@ export default function Dashboard() {
               properties.map((property) => (
                 <div key={property.id} className="property-card">
                   <div className="property-header">
-                    <h4 className="property-title">{property.name}</h4>
+                    <h4 className="property-title">{property.title || property.name}</h4>
                     <span className={`status-badge ${getStatusColor(property.status)}`}>
-                      {property.status}
+                      {property.status?.charAt(0).toUpperCase() + property.status?.slice(1)}
                     </span>
                   </div>
                   <div className="property-details">
@@ -319,9 +404,9 @@ export default function Dashboard() {
                     <div className="property-specs">
                       <span>{property.bedrooms} bed</span>
                       <span>{property.bathrooms} bath</span>
-                      <span>{property.type}</span>
+                      <span>{property.type?.charAt(0).toUpperCase() + property.type?.slice(1)}</span>
                     </div>
-                    <p className="property-rent">${property.rent}/month</p>
+                    <p className="property-rent">${property.rent}/week</p>
                       {property.tenant && (
                         <p className="property-tenant">Tenant: {property.tenant}</p>
                       )}
@@ -556,12 +641,12 @@ export default function Dashboard() {
               
               <form onSubmit={handleAddProperty} className="modal-form">
                 <div className="form-group">
-                  <label htmlFor="property-name">Property Name</label>
+                  <label htmlFor="property-title">Property Title</label>
                   <input
                     type="text"
-                    id="property-name"
-                    value={newProperty.name}
-                    onChange={(e) => setNewProperty({...newProperty, name: e.target.value})}
+                    id="property-title"
+                    value={newProperty.title}
+                    onChange={(e) => setNewProperty({...newProperty, title: e.target.value})}
                     required
                   />
                 </div>
@@ -603,7 +688,7 @@ export default function Dashboard() {
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="property-rent">Monthly Rent ($)</label>
+                  <label htmlFor="property-rent">Weekly Rent ($)</label>
                   <input
                     type="number"
                     id="property-rent"
@@ -615,6 +700,48 @@ export default function Dashboard() {
                   />
                 </div>
 
+                <div className="form-group">
+                  <label htmlFor="property-images">Property Images</label>
+                  <div className="image-upload-section">
+                    <input
+                      type="file"
+                      id="property-images"
+                      multiple
+                      accept="image/*"
+                      onChange={handleImageSelect}
+                      style={{ display: 'none' }}
+                    />
+                    <label htmlFor="property-images" className="image-upload-btn">
+                      <ImageIcon size={20} />
+                      Choose Images (Max 10, 5MB each)
+                    </label>
+                    
+                    {selectedImages.length > 0 && (
+                      <div className="selected-images">
+                        <p className="image-count">{selectedImages.length} image(s) selected</p>
+                        <div className="image-preview-grid">
+                          {selectedImages.map((file, index) => (
+                            <div key={index} className="image-preview-item">
+                              <img 
+                                src={URL.createObjectURL(file)} 
+                                alt={`Preview ${index + 1}`}
+                                className="image-preview"
+                              />
+                              <button
+                                type="button"
+                                className="remove-image-btn"
+                                onClick={() => removeImage(index)}
+                              >
+                                ×
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 <div className="modal-actions">
                   <button
                     type="button"
@@ -623,8 +750,8 @@ export default function Dashboard() {
                   >
                     Cancel
                   </button>
-                  <button type="submit" className="submit-btn">
-                    Add Property
+                  <button type="submit" className="submit-btn" disabled={uploadingImages}>
+                    {uploadingImages ? 'Uploading Images...' : 'Add Property'}
                   </button>
                 </div>
               </form>

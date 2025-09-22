@@ -50,7 +50,7 @@ export default function LandingPage() {
       <nav className="navbar">
         <div className="nav-container">
           <div className="nav-logo">
-            <h1>DOMIO.NZ</h1>
+            <img src="/src/assets/Logo.png" alt="Domio.nz Logo" className="logo-image" />
           </div>
 
           <div className={`nav-menu ${isMenuOpen ? 'active' : ''}`}>

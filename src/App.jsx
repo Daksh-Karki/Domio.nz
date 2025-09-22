@@ -14,8 +14,8 @@ import LandlordProperties from "./components/LandlordProperties.jsx";
 import LandlordApplications from "./components/LandlordApplications.jsx";
 import LandlordMaintenance from "./components/LandlordMaintenance.jsx";
 import LandlordFinancials from "./components/LandlordFinancials.jsx";
+import AddProperty from "./components/AddProperty.jsx";
 import ErrorBoundary from "./components/ErrorBoundary.jsx";
-import "./styles/Login.css";  // your theme CSS
 
 // Loading component
 function LoadingScreen() {
@@ -124,6 +124,14 @@ function AppContent() {
           element={
             <RoleBasedRoute allowedRoles={['landlord']}>
               <LandlordFinancials />
+            </RoleBasedRoute>
+          } 
+        />
+        <Route 
+          path="/landlord/add-property" 
+          element={
+            <RoleBasedRoute allowedRoles={['landlord']}>
+              <AddProperty />
             </RoleBasedRoute>
           } 
         />

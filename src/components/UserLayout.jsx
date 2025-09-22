@@ -6,7 +6,6 @@ import {
   Home, 
   Building2, 
   FileText, 
-  Settings, 
   LogOut, 
   Menu,
   X,
@@ -19,6 +18,7 @@ import '../styles/UserLayout.css';
 
 const UserLayout = ({ children, title, subtitle }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -55,12 +55,6 @@ const UserLayout = ({ children, title, subtitle }) => {
       icon: FileText,
       path: '/applications',
       description: 'Track your rental applications'
-    },
-    {
-      name: 'Settings',
-      icon: Settings,
-      path: '/settings',
-      description: 'Account and privacy settings'
     }
   ];
 
@@ -100,12 +94,6 @@ const UserLayout = ({ children, title, subtitle }) => {
       icon: DollarSign,
       path: '/landlord/financials',
       description: 'Track income and expenses'
-    },
-    {
-      name: 'Settings',
-      icon: Settings,
-      path: '/settings',
-      description: 'Account and privacy settings'
     }
   ];
 
@@ -124,14 +112,14 @@ const UserLayout = ({ children, title, subtitle }) => {
       )}
 
       {/* Sidebar */}
-      <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
+      <aside className={`sidebar ${sidebarOpen ? 'open' : ''} ${sidebarCollapsed ? 'collapsed' : ''}`}>
         <div className="sidebar-header">
           <button 
             className="back-btn"
             onClick={() => navigate('/')}
           >
             <ArrowLeft size={20} />
-            Back to Home
+            {!sidebarCollapsed && "Back to Home"}
           </button>
           <button 
             className="close-sidebar-btn"
@@ -152,46 +140,64 @@ const UserLayout = ({ children, title, subtitle }) => {
                 to={item.path}
                 className={`nav-item ${isActive ? 'active' : ''}`}
                 onClick={() => setSidebarOpen(false)}
+                title={sidebarCollapsed ? item.name : undefined}
               >
                 <Icon size={20} className="nav-icon" />
-                <div className="nav-content">
-                  <span className="nav-name">{item.name}</span>
-                  <span className="nav-description">{item.description}</span>
-                </div>
+                {!sidebarCollapsed && (
+                  <div className="nav-content">
+                    <span className="nav-name">{item.name}</span>
+                    <span className="nav-description">{item.description}</span>
+                  </div>
+                )}
               </Link>
             );
           })}
         </nav>
 
         <div className="sidebar-footer">
-          <button className="logout-btn" onClick={handleLogout}>
+          <button className="logout-btn" onClick={handleLogout} title={sidebarCollapsed ? "Sign Out" : undefined}>
             <LogOut size={20} />
-            <span>Sign Out</span>
+            {!sidebarCollapsed && <span>Sign Out</span>}
+          </button>
+          <button 
+            className="collapse-toggle-btn"
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {sidebarCollapsed ? <Menu size={20} /> : <X size={20} />}
+            {!sidebarCollapsed && <span>{sidebarCollapsed ? "Expand" : "Collapse"}</span>}
           </button>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="main-content">
+      <main className={`main-content ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
         {/* Top Bar */}
-        <header className="top-bar">
+        <header className={`top-bar ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
           <div className="top-bar-left">
             <button 
               className="menu-btn"
               onClick={() => setSidebarOpen(true)}
             >
-              <Menu size={24} />
+              <Menu size={20} />
             </button>
-          </div>
-          
-          <div className="top-bar-center">
-            <h1 className="page-title">{title}</h1>
-            {subtitle && <p className="page-subtitle">{subtitle}</p>}
+            <div className="page-header">
+              <h1 className="page-title">{title}</h1>
+              {subtitle && <p className="page-subtitle">{subtitle}</p>}
+            </div>
           </div>
 
           <div className="top-bar-right">
-            <div className="username-badge">
-              @{user?.username}
+            <div className="user-profile">
+              <div className="user-avatar">
+                <span className="avatar-text">
+                  {user?.username?.charAt(0)?.toUpperCase() || 'U'}
+                </span>
+              </div>
+              <div className="user-info">
+                <span className="username">@{user?.username}</span>
+                <span className="user-role">{user?.role?.charAt(0)?.toUpperCase() + user?.role?.slice(1) || 'User'}</span>
+              </div>
             </div>
           </div>
         </header>

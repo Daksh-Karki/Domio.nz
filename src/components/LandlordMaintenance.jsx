@@ -20,7 +20,7 @@ import {
   FileText,
   Star
 } from 'lucide-react';
-import '../styles/Applications.css';
+import '../styles/shared.css';
 
 const LandlordMaintenance = () => {
   const { user } = useAuth();

@@ -19,7 +19,7 @@ import {
   MessageSquare,
   Download
 } from 'lucide-react';
-import '../styles/Applications.css';
+import '../styles/shared.css';
 
 const LandlordApplications = () => {
   const { user } = useAuth();

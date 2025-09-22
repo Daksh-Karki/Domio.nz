@@ -309,7 +309,9 @@ const Profile = () => {
     return (
       <div className="fullscreen-loading">
         <div className="loading-container">
-          <div className="loading-spinner"></div>
+          <div className="loading-logo">
+            <img src="/src/assets/Logo.png" alt="Domio.nz Logo" />
+          </div>
           <p>Loading your profile...</p>
           <div className="loading-dots">
             <span></span>
