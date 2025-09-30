@@ -128,7 +128,32 @@ body {
   z-index: 3;
 }
 
-/* Navigation */
+/* KEYFRAMES */
+@keyframes slideDownFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes menuFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */
+
+/* NAVIGATION */
 .navbar {
   position: fixed;
   top: 0;
@@ -139,7 +164,8 @@ body {
   backdrop-filter: blur(20px);
   border-bottom: 1px solid rgba(59, 130, 246, 0.1);
   box-shadow: 0 4px 25px rgba(59, 130, 246, 0.08);
-  animation: fadeIn 0.8s ease-in;
+
+  animation: slideDownFadeIn 0.6s ease-out forwards; 
 }
 
 .nav-container {
@@ -155,23 +181,33 @@ body {
   height: 50px;
   width: auto;
   object-fit: contain;
+  transition: transform 0.3s ease-in-out; 
 }
 
+.logo-image:hover {
+  transform: scale(1.03); 
+}
+
+/* ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */
+
+/* MENU AND LINKS */
 .nav-menu {
   display: flex;
   gap: 2rem;
+  animation: menuFadeIn 0.6s ease-out 0.3s backwards; 
 }
 
 .nav-link {
   color: #475569;
   text-decoration: none;
   font-weight: 500;
-  transition: color 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition: color 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.3s ease-out; 
+  display: inline-block; 
 }
 
 .nav-link:hover {
   color: #3b82f6;
-  transform: scale(1.05);
+  transform: translateY(-2px); 
 }
 
 .nav-auth {
@@ -180,15 +216,24 @@ body {
   align-items: center;
   justify-content: flex-end;
   flex-wrap: nowrap;
+  animation: menuFadeIn 0.6s ease-out 0.4s backwards; 
 }
 
+/* ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */
+
+/* BUTTONS (General) */
 .nav-btn {
+  /*
+    * This dictates the final size and alignment for consistency
+    * Height is 44px
+    * Padding is 12px 20px
+  */
   padding: 12px 20px;
   border-radius: 8px;
   text-decoration: none;
   font-weight: 500;
   font-size: 15px;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease-in-out; 
   border: 1px solid transparent;
   cursor: pointer;
   white-space: nowrap;
@@ -200,39 +245,43 @@ body {
   min-width: 85px;
 }
 
+/* Ensure both login & signup buttons are consistent */
 .login-btn,
 .signup-btn {
-  width: 85px !important;
-  height: 40px !important;
-  padding: 10px 16px !important;
-  border: 1px solid !important;
-  border-radius: 8px !important;
-  font-size: 14px !important;
-  font-weight: 500 !important;
-  text-align: center !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  box-sizing: border-box !important;
-  box-shadow: none !important;
-  transition: all 0.2s ease !important;
-  white-space: nowrap !important;
+  padding: 12px 20px;        /* same padding */
+  height: 44px;              /* same height */
+  line-height: 20px;         /* keep text centered vertically */
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
 }
 
+
+/* ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */
+
+/* LOGIN BUTTON (Primary Styling) */
 .login-btn {
-  color: #374151 !important;
-  background: transparent !important;
-  border-color: #e5e7eb !important;
+  background: #3b82f6 !important;
+  color: white !important;
+  border-color: #3b82f6 !important;
 }
 
 .login-btn:hover {
-  background: #f9fafb !important;
-  color: #1f2937 !important;
-  border-color: #d1d5db !important;
-  box-shadow: none !important;
-  transform: translateY(-1px);
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+  background-color: #2563eb !important; 
+  color: white !important;
+  border-color: #2563eb !important;
+  box-shadow: 0 6px 15px rgba(59, 130, 246, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.05) !important;
+  transform: translateY(-2px) !important; 
 }
 
+/* ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */
+
+/* SIGN UP BUTTON (Primary Styling) */
 .signup-btn {
   background: #3b82f6 !important;
   color: white !important;
@@ -240,12 +289,13 @@ body {
 }
 
 .signup-btn:hover {
-  background: #2563eb !important;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+  background-color: #2563eb !important; 
+  color: white !important;
   border-color: #2563eb !important;
-  box-shadow: none !important;
-  transform: translateY(-1px);
+  box-shadow: 0 6px 15px rgba(59, 130, 246, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.05) !important;
+  transform: translateY(-2px) !important; 
 }
-
 /* Account Dropdown */
 .account-dropdown {
   position: relative;
