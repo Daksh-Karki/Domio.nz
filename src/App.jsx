@@ -28,10 +28,10 @@ function LoadingScreen() {
       justifyContent: 'center', 
       alignItems: 'center', 
       height: '100vh',
-      fontSize: '28px',
-      color: '#8b5cf6'
+      fontSize: '18px',
+      color: '#666'
     }}>
-      Finding your perfect space…
+      Loading...
     </div>
   );
 }
