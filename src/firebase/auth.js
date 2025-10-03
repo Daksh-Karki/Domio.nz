@@ -4,10 +4,16 @@ import {
   signOut, 
   signInWithPopup,
   updateProfile,
-  onAuthStateChanged
+  onAuthStateChanged,
+  sendPasswordResetEmail,
+  sendEmailVerification,
+  updatePassword,
+  reauthenticateWithCredential,
+  EmailAuthProvider
 } from 'firebase/auth';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { auth, db, googleProvider } from './config.js';
+import { generateRandomUsername } from './userService.js';
 
 // Email/Password Sign Up
 export const signUpWithEmail = async (email, password, userData) => {
@@ -15,15 +21,20 @@ export const signUpWithEmail = async (email, password, userData) => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
     
+    // Generate a random username
+    const randomUsername = generateRandomUsername(userData.firstName, userData.lastName);
+    
     // Update user profile with display name
     await updateProfile(user, {
       displayName: `${userData.firstName} ${userData.lastName}`
     });
     
-    // Create user document in Firestore
+    // Create user document in Firestore with generated username
     const firestoreResult = await createUserDocument(user.uid, {
       ...userData,
+      username: randomUsername,
       email: user.email,
+      emailVerified: false, // Mark as unverified initially
       createdAt: new Date(),
       updatedAt: new Date()
     });
@@ -32,8 +43,26 @@ export const signUpWithEmail = async (email, password, userData) => {
       console.error('Failed to create user document in Firestore:', firestoreResult.error);
     }
     
+    // Send email verification to check if email actually exists
+    try {
+      await sendEmailVerification(user);
+      console.log('Verification email sent successfully');
+    } catch (verificationError) {
+      console.error('Failed to send verification email:', verificationError);
+      // Don't fail signup if verification email fails, but log the error
+    }
+    
     return { success: true, user };
   } catch (error) {
+    // Handle specific Firebase auth errors
+    if (error.code === 'auth/email-already-in-use') {
+      return { success: false, error: 'Email is already registered. Please use a different email or try signing in.' };
+    } else if (error.code === 'auth/weak-password') {
+      return { success: false, error: 'Password is too weak. Please choose a stronger password.' };
+    } else if (error.code === 'auth/invalid-email') {
+      return { success: false, error: 'Invalid email address. Please enter a valid email.' };
+    }
+    
     return { success: false, error: error.message };
   }
 };
@@ -57,12 +86,17 @@ export const signInWithGoogle = async () => {
     // Check if user document exists, if not create one
     const userDoc = await getDoc(doc(db, 'users', user.uid));
     if (!userDoc.exists()) {
+      const firstName = user.displayName?.split(' ')[0] || '';
+      const lastName = user.displayName?.split(' ').slice(1).join(' ') || '';
+      const randomUsername = generateRandomUsername(firstName, lastName);
+      
       const firestoreResult = await createUserDocument(user.uid, {
-        firstName: user.displayName?.split(' ')[0] || '',
-        lastName: user.displayName?.split(' ').slice(1).join(' ') || '',
-        username: user.displayName?.replace(/\s+/g, '').toLowerCase() || '',
+        firstName,
+        lastName,
+        username: randomUsername,
         email: user.email,
-        phone: user.phoneNumber || '',
+        emailVerified: true, // Google emails are already verified
+        phone: '',
         role: 'tenant', // Default role
         about: 'I am a responsible tenant looking for a comfortable place to call home.',
         createdAt: new Date(),
@@ -93,7 +127,13 @@ export const signOutUser = async () => {
 // Create user document in Firestore
 export const createUserDocument = async (uid, userData) => {
   try {
-    await setDoc(doc(db, 'users', uid), userData);
+    // Normalize username to lowercase for consistency
+    const normalizedUserData = {
+      ...userData,
+      username: userData.username ? userData.username.toLowerCase().trim() : userData.username
+    };
+    
+    await setDoc(doc(db, 'users', uid), normalizedUserData);
     return { success: true };
   } catch (error) {
     return { success: false, error: error.message };
@@ -126,6 +166,52 @@ export const updateUserDocument = async (uid, updateData) => {
   } catch (error) {
     return { success: false, error: error.message };
   }
+};
+
+// Send password reset email
+export const sendPasswordReset = async (email) => {
+  try {
+    await sendPasswordResetEmail(auth, email);
+    return { success: true, message: 'Password reset email sent successfully' };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+};
+
+// Send email verification
+export const sendEmailVerificationToUser = async (user) => {
+  try {
+    await sendEmailVerification(user);
+    return { success: true, message: 'Verification email sent successfully' };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+};
+
+// Update user password (requires reauthentication)
+export const updateUserPassword = async (currentPassword, newPassword) => {
+  try {
+    const user = auth.currentUser;
+    if (!user) {
+      return { success: false, error: 'No user logged in' };
+    }
+
+    // Reauthenticate user with current password
+    const credential = EmailAuthProvider.credential(user.email, currentPassword);
+    await reauthenticateWithCredential(user, credential);
+
+    // Update password
+    await updatePassword(user, newPassword);
+    return { success: true, message: 'Password updated successfully' };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+};
+
+// Check if user email is verified
+export const isEmailVerified = () => {
+  const user = auth.currentUser;
+  return user ? user.emailVerified : false;
 };
 
 // Auth state observer

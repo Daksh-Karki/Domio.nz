@@ -2,8 +2,10 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus, Home, DollarSign, Wrench, Users, Building2, FileText, TrendingUp, Calendar, AlertCircle, CheckCircle, Clock, UserCheck, UserX } from "lucide-react";
 import UserLayout from "./UserLayout.jsx";
+// import TenantDashboard from "./TenantDashboard.jsx";
 import { useAuth } from "../context/AuthContext";
 import { getLandlordProperties, getPropertyStats } from "../firebase/propertyService.js";
+import Logo from "../assets/Logo.png";
 import "../styles/Dashboard.css";
 
 export default function Dashboard() {
@@ -244,7 +246,7 @@ export default function Dashboard() {
       <div className="fullscreen-loading">
         <div className="loading-container">
           <div className="loading-logo">
-            <img src="/src/assets/Logo.png" alt="Domio.nz Logo" />
+            <img src={Logo} alt="Domio.nz Logo" />
           </div>
           <p>Loading your dashboard...</p>
           <div className="loading-dots">
@@ -258,11 +260,35 @@ export default function Dashboard() {
   }
 
   const isLandlord = user?.role?.toLowerCase() === 'landlord';
+  
+  // Debug logging
+  console.log('Dashboard - User:', user);
+  console.log('Dashboard - User role:', user?.role);
+  console.log('Dashboard - Is landlord:', isLandlord);
+
+  // If user is a tenant, show a simple tenant dashboard
+  if (!isLandlord) {
+    console.log('Dashboard - Rendering Tenant Dashboard');
+    return (
+      <UserLayout 
+        title="Dashboard" 
+        subtitle="Welcome back! Here's your rental overview"
+      >
+        <div style={{ padding: '20px', background: 'white', borderRadius: '8px' }}>
+          <h2>Tenant Dashboard</h2>
+          <p>Welcome, {user?.firstName || 'User'}!</p>
+          <p>This is a simplified tenant dashboard. The full dashboard is being developed.</p>
+        </div>
+      </UserLayout>
+    );
+  }
+  
+  console.log('Dashboard - Rendering Landlord Dashboard');
 
   return (
     <UserLayout 
       title="Dashboard" 
-      subtitle={isLandlord ? "Manage your properties and tenants" : "Overview of your account and applications"}
+      subtitle="Manage your properties and tenants"
     >
       <div className="dashboard-content-wrapper">
         {/* Stats Cards */}

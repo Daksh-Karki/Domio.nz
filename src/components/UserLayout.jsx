@@ -12,7 +12,8 @@ import {
   ArrowLeft,
   Wrench,
   DollarSign,
-  Users
+  Users,
+  MessageCircle
 } from 'lucide-react';
 import '../styles/UserLayout.css';
 
@@ -45,16 +46,16 @@ const UserLayout = ({ children, title, subtitle }) => {
       description: 'Manage your personal information'
     },
     {
-      name: 'My Properties',
-      icon: Building2,
-      path: '/my-properties',
-      description: 'View and manage your properties'
-    },
-    {
       name: 'Applications',
       icon: FileText,
       path: '/applications',
       description: 'Track your rental applications'
+    },
+    {
+      name: 'Messages',
+      icon: MessageCircle,
+      path: '/messaging',
+      description: 'Communicate with landlords'
     }
   ];
 
@@ -82,6 +83,12 @@ const UserLayout = ({ children, title, subtitle }) => {
       icon: FileText,
       path: '/landlord/applications',
       description: 'Review tenant applications'
+    },
+    {
+      name: 'Messages',
+      icon: MessageCircle,
+      path: '/messaging',
+      description: 'Communicate with tenants'
     },
     {
       name: 'Maintenance',

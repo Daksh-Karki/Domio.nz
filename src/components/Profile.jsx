@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { User, Mail, Phone, Camera, Shield, Edit3, AtSign, X, FileText, Upload, Download, Trash2, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
-import { getUserDocument, updateUserDocument } from '../firebase/auth.js';
+import { getUserDocument, updateUserDocument, updateUserPassword, sendEmailVerificationToUser, isEmailVerified } from '../firebase/auth.js';
+import { validateUsernameFormat } from '../firebase/userService.js';
 import { uploadProfileImage, getProfileImageURL, deleteDocument, uploadDocument, getUserDocuments } from '../firebase/storageService.js';
 import UserLayout from './UserLayout.jsx';
+import Logo from '../assets/Logo.png';
 import '../styles/Profile.css';
 
 const Profile = () => {
@@ -28,6 +30,19 @@ const Profile = () => {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [selectedDocumentType, setSelectedDocumentType] = useState('ID');
   const [isDocumentUploading, setIsDocumentUploading] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [isPasswordUpdating, setIsPasswordUpdating] = useState(false);
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [isResendingVerification, setIsResendingVerification] = useState(false);
+  const [showUsernameModal, setShowUsernameModal] = useState(false);
+  const [newUsername, setNewUsername] = useState('');
+  const [isUsernameUpdating, setIsUsernameUpdating] = useState(false);
+  const [usernameStatus, setUsernameStatus] = useState({ checking: false, available: null, message: '' });
 
   const documentTypes = [
     { label: 'ID', value: 'ID' },
@@ -54,6 +69,11 @@ const Profile = () => {
         about: user.about || 'I am a responsible tenant looking for a comfortable place to call home.',
       };
       setProfileData(profileDataToSet);
+      
+      // Check email verification status from both Firebase Auth and Firestore
+      const firebaseEmailVerified = isEmailVerified();
+      const firestoreEmailVerified = user.emailVerified || false;
+      setEmailVerified(firebaseEmailVerified || firestoreEmailVerified);
       
       // Load profile image and documents, then set loading to false
       const loadData = async () => {
@@ -304,13 +324,137 @@ const Profile = () => {
     return date.toLocaleDateString();
   };
 
+  // Handle password change
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+    
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setError('New passwords do not match');
+      return;
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      setError('New password must be at least 6 characters long');
+      return;
+    }
+
+    setIsPasswordUpdating(true);
+    setError('');
+
+    try {
+      const result = await updateUserPassword(passwordData.currentPassword, passwordData.newPassword);
+      
+      if (result.success) {
+        setMessage('Password updated successfully!');
+        setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+        setShowPasswordModal(false);
+      } else {
+        setError(result.error);
+      }
+    } catch (error) {
+      setError('Error updating password: ' + error.message);
+    } finally {
+      setIsPasswordUpdating(false);
+    }
+  };
+
+  // Handle email verification
+  const handleSendEmailVerification = async () => {
+    if (!user) return;
+
+    setIsResendingVerification(true);
+    setError('');
+
+    try {
+      const result = await sendEmailVerificationToUser(user);
+      if (result.success) {
+        setMessage('Verification email sent! Please check your inbox and click the verification link.');
+      } else {
+        setError('Failed to send verification email: ' + result.error);
+      }
+    } catch (error) {
+      setError('Error sending verification email: ' + error.message);
+    } finally {
+      setIsResendingVerification(false);
+    }
+  };
+
+  const handlePasswordInputChange = (e) => {
+    const { name, value } = e.target;
+    setPasswordData(prev => ({ ...prev, [name]: value }));
+  };
+
+  // Handle username change
+  const handleUsernameChange = async (e) => {
+    e.preventDefault();
+    
+    if (!newUsername.trim()) {
+      setError('Username cannot be empty');
+      return;
+    }
+
+    const formatValidation = validateUsernameFormat(newUsername);
+    if (!formatValidation.valid) {
+      setError(formatValidation.error);
+      return;
+    }
+
+    setIsUsernameUpdating(true);
+    setError('');
+
+    try {
+      const result = await updateUserDocument(user.uid, {
+        username: newUsername.toLowerCase().trim()
+      });
+      
+      if (result.success) {
+        setMessage('Username updated successfully!');
+        setNewUsername('');
+        setShowUsernameModal(false);
+        // Refresh user data to show updated username
+        await refreshUserData();
+      } else {
+        setError(result.error || 'Failed to update username');
+      }
+    } catch (error) {
+      setError('Error updating username: ' + error.message);
+    } finally {
+      setIsUsernameUpdating(false);
+    }
+  };
+
+  // Handle username input change with validation
+  const handleUsernameInputChange = (e) => {
+    const value = e.target.value;
+    setNewUsername(value);
+    
+    if (value.trim()) {
+      const formatValidation = validateUsernameFormat(value);
+      if (formatValidation.valid) {
+        setUsernameStatus({
+          checking: false,
+          available: true,
+          message: 'Username format is valid'
+        });
+      } else {
+        setUsernameStatus({
+          checking: false,
+          available: false,
+          message: formatValidation.error
+        });
+      }
+    } else {
+      setUsernameStatus({ checking: false, available: null, message: '' });
+    }
+  };
+
   // Show loading state
   if (isLoading) {
     return (
       <div className="fullscreen-loading">
         <div className="loading-container">
           <div className="loading-logo">
-            <img src="/src/assets/Logo.png" alt="Domio.nz Logo" />
+            <img src={Logo} alt="Domio.nz Logo" />
           </div>
           <p>Loading your profile...</p>
           <div className="loading-dots">
@@ -426,15 +570,27 @@ const Profile = () => {
                     <AtSign size={16} className="label-icon" />
                     Username
                   </label>
-                  <input
-                    type="text"
-                    id="username"
-                    name="username"
-                    value={profileData.username}
-                    onChange={handleInputChange}
-                    className="form-input"
-                    placeholder="Enter your username"
-                  />
+                  <div className="username-field">
+                    <input
+                      type="text"
+                      id="username"
+                      name="username"
+                      value={profileData.username}
+                      className="form-input"
+                      placeholder="Enter your username"
+                      readOnly
+                    />
+                    <button
+                      type="button"
+                      className="edit-username-btn"
+                      onClick={() => {
+                        setNewUsername(profileData.username);
+                        setShowUsernameModal(true);
+                      }}
+                    >
+                      Edit
+                    </button>
+                  </div>
                   <small className="form-help">This will be your unique identifier on the platform</small>
                 </div>
 
@@ -449,7 +605,29 @@ const Profile = () => {
                     className="form-input disabled"
                     placeholder="Your email address"
                   />
-                  <small className="form-help">Email cannot be changed</small>
+                  <div className="email-status">
+                    <small className="form-help">Email cannot be changed</small>
+                    <div className="verification-status">
+                      {emailVerified ? (
+                        <span className="verified-status">
+                          <Shield size={14} />
+                          Email verified
+                        </span>
+                      ) : (
+                        <div className="unverified-status">
+                          <span className="unverified-text">Email not verified</span>
+                          <button
+                            type="button"
+                            onClick={handleSendEmailVerification}
+                            className="verify-btn"
+                            disabled={isResendingVerification}
+                          >
+                            {isResendingVerification ? 'Sending...' : 'Send verification email'}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
                 <div className="form-group">
@@ -503,6 +681,13 @@ const Profile = () => {
                     disabled={isUpdating}
                   >
                     {isUpdating ? 'Saving...' : 'Save Changes'}
+                  </button>
+                  <button 
+                    type="button" 
+                    className="password-button" 
+                    onClick={() => setShowPasswordModal(true)}
+                  >
+                    Change Password
                   </button>
                 </div>
               </form>
@@ -710,6 +895,151 @@ const Profile = () => {
                   <Camera size={16} />
                   Upload New Photo
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Username Change Modal */}
+        {showUsernameModal && (
+          <div className="username-modal-overlay" onClick={() => setShowUsernameModal(false)}>
+            <div className="username-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h3>Change Username</h3>
+                <button className="close-modal-btn" onClick={() => setShowUsernameModal(false)}>
+                  <X size={20} />
+                </button>
+              </div>
+              
+              <div className="modal-content">
+                <form onSubmit={handleUsernameChange} className="username-form">
+                  <div className="form-group">
+                    <label htmlFor="newUsername">New Username</label>
+                    <input
+                      type="text"
+                      id="newUsername"
+                      name="newUsername"
+                      value={newUsername}
+                      onChange={handleUsernameInputChange}
+                      className="form-input"
+                      placeholder="Enter your new username"
+                      required
+                    />
+                    {usernameStatus.message && (
+                      <span 
+                        className="field-status"
+                        style={{
+                          color: usernameStatus.available === true ? '#4CAF50' : 
+                                 usernameStatus.available === false ? '#f44336' : '#666',
+                          fontSize: '12px',
+                          marginTop: '4px',
+                          display: 'block'
+                        }}
+                      >
+                        {usernameStatus.message}
+                      </span>
+                    )}
+                    <small className="form-help">Username must be 3-20 characters, letters, numbers, and underscores only</small>
+                  </div>
+                  
+                  <div className="modal-actions">
+                    <button
+                      type="button"
+                      className="cancel-btn"
+                      onClick={() => setShowUsernameModal(false)}
+                      disabled={isUsernameUpdating}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="save-btn"
+                      disabled={isUsernameUpdating || !usernameStatus.available}
+                    >
+                      {isUsernameUpdating ? 'Updating...' : 'Update Username'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Password Change Modal */}
+        {showPasswordModal && (
+          <div className="password-modal-overlay" onClick={() => setShowPasswordModal(false)}>
+            <div className="password-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h3>Change Password</h3>
+                <button className="close-modal-btn" onClick={() => setShowPasswordModal(false)}>
+                  <X size={20} />
+                </button>
+              </div>
+              
+              <div className="modal-content">
+                <form onSubmit={handlePasswordChange} className="password-form">
+                  <div className="form-group">
+                    <label htmlFor="currentPassword">Current Password</label>
+                    <input
+                      type="password"
+                      id="currentPassword"
+                      name="currentPassword"
+                      value={passwordData.currentPassword}
+                      onChange={handlePasswordInputChange}
+                      className="form-input"
+                      placeholder="Enter your current password"
+                      required
+                    />
+                  </div>
+                  
+                  <div className="form-group">
+                    <label htmlFor="newPassword">New Password</label>
+                    <input
+                      type="password"
+                      id="newPassword"
+                      name="newPassword"
+                      value={passwordData.newPassword}
+                      onChange={handlePasswordInputChange}
+                      className="form-input"
+                      placeholder="Enter your new password"
+                      required
+                      minLength="6"
+                    />
+                    <small className="form-help">Password must be at least 6 characters long</small>
+                  </div>
+                  
+                  <div className="form-group">
+                    <label htmlFor="confirmPassword">Confirm New Password</label>
+                    <input
+                      type="password"
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      value={passwordData.confirmPassword}
+                      onChange={handlePasswordInputChange}
+                      className="form-input"
+                      placeholder="Confirm your new password"
+                      required
+                    />
+                  </div>
+                  
+                  <div className="modal-actions">
+                    <button
+                      type="button"
+                      className="cancel-btn"
+                      onClick={() => setShowPasswordModal(false)}
+                      disabled={isPasswordUpdating}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="save-btn"
+                      disabled={isPasswordUpdating}
+                    >
+                      {isPasswordUpdating ? 'Updating...' : 'Update Password'}
+                    </button>
+                  </div>
+                </form>
               </div>
             </div>
           </div>

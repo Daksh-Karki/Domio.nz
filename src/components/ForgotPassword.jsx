@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import "../styles/ForgotPassword.css";
 import p1 from "../assets/p1.jpg";
 import { Link, useNavigate } from "react-router-dom";
+import { sendPasswordReset } from "../firebase/auth.js";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -19,11 +20,19 @@ export default function ForgotPassword() {
     setLoading(true);
     setStatus("");
     
-    // Simulate password reset
-    setTimeout(() => {
-      setStatus(`Password reset link sent to ${email}! Check your email.`);
+    try {
+      const result = await sendPasswordReset(email);
+      
+      if (result.success) {
+        setStatus(`Password reset link sent to ${email}! Check your email and follow the instructions to reset your password.`);
+      } else {
+        setStatus(`Error: ${result.error}`);
+      }
+    } catch (error) {
+      setStatus(`An error occurred: ${error.message}`);
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   return (

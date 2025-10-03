@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
 import UserLayout from './UserLayout.jsx';
+import Logo from '../assets/Logo.png';
 import { Building2, MapPin, Bed, Bath, DollarSign, Edit, Trash2, Plus } from 'lucide-react';
 import '../styles/shared.css';
 
@@ -75,7 +76,7 @@ const MyProperties = () => {
       <UserLayout title="My Properties" subtitle="Loading your properties...">
         <div className="loading-container">
           <div className="loading-logo">
-            <img src="/src/assets/Logo.png" alt="Domio.nz Logo" />
+            <img src={Logo} alt="Domio.nz Logo" />
           </div>
           <p>Loading your properties...</p>
         </div>

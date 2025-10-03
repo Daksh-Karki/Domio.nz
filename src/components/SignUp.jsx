@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { signUpWithEmail, signInWithGoogle } from "../firebase/auth.js";
+import { checkEmailExists } from "../firebase/userService.js";
 import "../styles/SignUP.css";
 import p3 from "../assets/p3.jpg";
 import { useAuth } from "../context/AuthContext";
@@ -11,8 +12,6 @@ export default function SignUp() {
   // Step 1
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [username, setUsername] = useState("");
-  const [phone, setPhone] = useState("");
 
   // Step 2
   const [email, setEmail] = useState("");
@@ -25,6 +24,7 @@ export default function SignUp() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
+  const [emailStatus, setEmailStatus] = useState({ checking: false, exists: null, message: '' });
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -36,6 +36,53 @@ export default function SignUp() {
   }, [user, navigate]);
 
   const roles = ["Tenant", "Landlord"];
+
+  // Email validation with debouncing
+  useEffect(() => {
+    const checkEmail = async () => {
+      if (!email.trim()) {
+        setEmailStatus({ checking: false, exists: null, message: '' });
+        return;
+      }
+
+      // Basic email format validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        setEmailStatus({ checking: false, exists: false, message: 'Please enter a valid email address' });
+        return;
+      }
+
+      setEmailStatus({ checking: true, exists: null, message: 'Checking email availability...' });
+
+      try {
+        const result = await checkEmailExists(email);
+        
+        if (result.success) {
+          setEmailStatus({
+            checking: false,
+            exists: result.exists,
+            message: result.message
+          });
+        } else {
+          setEmailStatus({
+            checking: false,
+            exists: false,
+            message: 'Email format is valid'
+          });
+        }
+      } catch (error) {
+        console.error('Email check error:', error);
+        setEmailStatus({
+          checking: false,
+          exists: false,
+          message: 'Email format is valid'
+        });
+      }
+    };
+
+    const timeoutId = setTimeout(checkEmail, 500); // Debounce for 500ms
+    return () => clearTimeout(timeoutId);
+  }, [email]);
 
   // Password strength helper
   const getPasswordStrength = (pass) => {
@@ -70,13 +117,6 @@ export default function SignUp() {
     const errors = {};
     if (!firstName.trim()) errors.firstName = "First name is required";
     if (!lastName.trim()) errors.lastName = "Last name is required";
-    if (!username.trim()) errors.username = "Username is required";
-    if (!phone.trim()) errors.phone = "Phone number is required";
-    
-    // Username validation
-    if (username.trim() && !/^[a-zA-Z0-9_]{3,20}$/.test(username.trim())) {
-      errors.username = "Username must be 3-20 characters, letters, numbers, and underscores only";
-    }
     
     return errors;
   };
@@ -84,6 +124,19 @@ export default function SignUp() {
   const validateStep2 = () => {
     const errors = {};
     if (!email.trim()) errors.email = "Email is required";
+    
+    // Email validation
+    if (email.trim()) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        errors.email = "Please enter a valid email address";
+      } else if (emailStatus.checking) {
+        errors.email = "Please wait while we check email availability";
+      } else if (emailStatus.exists === true) {
+        errors.email = "Email is already registered. Please use a different email or try signing in.";
+      }
+    }
+    
     if (!validatePassword(password)) {
       errors.password = "Password must be at least 6 characters with uppercase, number, and special character";
     }
@@ -117,9 +170,7 @@ export default function SignUp() {
       const userData = {
         firstName,
         lastName,
-        username: username.trim().toLowerCase(),
         email,
-        phone,
         role: role.toLowerCase(),
         about: 'I am a responsible tenant looking for a comfortable place to call home.'
       };
@@ -127,10 +178,10 @@ export default function SignUp() {
       const result = await signUpWithEmail(email, password, userData);
       
       if (result.success) {
-        setFieldErrors({ general: "Account created successfully! Redirecting..." });
+        setFieldErrors({ general: "Account created successfully! Please check your email for verification link. Redirecting..." });
         setTimeout(() => {
           navigate("/");
-        }, 1500);
+        }, 3000);
       } else {
         setFieldErrors({ general: `Signup failed: ${result.error}` });
       }
@@ -244,27 +295,6 @@ export default function SignUp() {
               </div>
             </div>
 
-            <div className="input-group">
-              <input
-                type="text"
-                placeholder="Username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-              />
-              {fieldErrors.username && <span className="field-error">{fieldErrors.username}</span>}
-            </div>
-
-            <div className="input-group">
-              <input
-                type="tel"
-                placeholder="Phone Number"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                required
-              />
-              {fieldErrors.phone && <span className="field-error">{fieldErrors.phone}</span>}
-            </div>
 
             <div className="input-group">
               <select
@@ -297,8 +327,29 @@ export default function SignUp() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                style={{
+                  borderColor: emailStatus.exists === true ? '#f44336' : 
+                              emailStatus.exists === false ? '#4CAF50' : 
+                              emailStatus.checking ? '#ff9800' : '#ddd'
+                }}
               />
               {fieldErrors.email && <span className="field-error">{fieldErrors.email}</span>}
+              {emailStatus.message && !fieldErrors.email && (
+                <span 
+                  className="field-status"
+                  style={{
+                    color: emailStatus.exists === true ? '#f44336' : 
+                           emailStatus.exists === false ? '#4CAF50' : 
+                           emailStatus.checking ? '#ff9800' : '#666',
+                    fontSize: '12px',
+                    marginTop: '4px',
+                    display: 'block'
+                  }}
+                >
+                  {emailStatus.checking && <span className="loading-spinner" style={{display: 'inline-block', marginRight: '5px'}}></span>}
+                  {emailStatus.message}
+                </span>
+              )}
             </div>
 
             <div className="input-group">

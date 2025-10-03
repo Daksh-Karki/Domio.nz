@@ -327,3 +327,43 @@ export const getPropertyStats = async (landlordId) => {
     return { success: false, error: error.message };
   }
 };
+
+// Get all available properties for tenants to browse
+export const getAvailableProperties = async () => {
+  try {
+    const propertiesRef = collection(db, 'properties');
+    
+    // First query: get all active properties
+    const activeQuery = query(
+      propertiesRef,
+      where('isActive', '==', true)
+    );
+    
+    const querySnapshot = await getDocs(activeQuery);
+    const properties = [];
+    
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      
+      // Filter for available properties in code (to avoid composite index requirement)
+      if (data.status === 'available') {
+        properties.push({
+          id: doc.id,
+          ...data
+        });
+      }
+    });
+    
+    // Sort by createdAt in code
+    properties.sort((a, b) => {
+      const aTime = a.createdAt?.toDate?.() || new Date(a.createdAt || 0);
+      const bTime = b.createdAt?.toDate?.() || new Date(b.createdAt || 0);
+      return bTime - aTime; // newest first
+    });
+    
+    return { success: true, data: properties };
+  } catch (error) {
+    console.error('Error fetching available properties:', error);
+    return { success: false, error: error.message };
+  }
+};

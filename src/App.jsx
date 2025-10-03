@@ -8,8 +8,11 @@ import ForgotPassword from "./components/ForgotPassword.jsx";
 import SignUp from "./components/SignUp.jsx";
 import Dashboard from "./components/Dashboard.jsx";
 import Profile from "./components/Profile.jsx";
-import MyProperties from "./components/MyProperties.jsx";
 import Applications from "./components/Applications.jsx";
+import BrowseProperties from "./components/BrowseProperties.jsx";
+// import PropertyDetails from "./components/PropertyDetails.jsx";
+import About from "./components/About.jsx";
+import Messaging from "./components/Messaging.jsx";
 import LandlordProperties from "./components/LandlordProperties.jsx";
 import LandlordApplications from "./components/LandlordApplications.jsx";
 import LandlordMaintenance from "./components/LandlordMaintenance.jsx";
@@ -67,24 +70,31 @@ function AppContent() {
   }
   
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
+            <Router>
+              <Routes>
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/landing" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/signup" element={<SignUp />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/messaging" element={<Messaging />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/profile" element={<Profile />} />
         
         {/* Tenant Routes */}
         <Route 
-          path="/my-properties" 
+          path="/browse" 
+          element={<BrowseProperties />} 
+        />
+        {/* <Route 
+          path="/property/:propertyId" 
           element={
             <RoleBasedRoute allowedRoles={['tenant']}>
-              <MyProperties />
+              <PropertyDetails />
             </RoleBasedRoute>
           } 
-        />
+        /> */}
         <Route 
           path="/applications" 
           element={

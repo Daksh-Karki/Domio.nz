@@ -1,104 +1,131 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
 import UserLayout from './UserLayout.jsx';
-import { FileText, Clock, CheckCircle, XCircle, AlertCircle, Building2, MapPin, DollarSign } from 'lucide-react';
+import { FileText, Clock, CheckCircle, XCircle, AlertCircle, Building2, MapPin, DollarSign, Eye, Trash2, ExternalLink } from 'lucide-react';
+import { getTenantApplications, withdrawApplication } from '../firebase/applicationService.js';
+import { getProperty } from '../firebase/propertyService.js';
+import Logo from '../assets/Logo.png';
 import '../styles/shared.css';
+import '../styles/Applications.css';
 
 const Applications = () => {
   const { user } = useAuth();
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Simulate loading applications
-    setTimeout(() => {
-      setApplications([
-        {
-          id: 1,
-          propertyTitle: "Modern Downtown Apartment",
-          propertyLocation: "Auckland CBD",
-          propertyPrice: "$650/week",
-          propertyType: "Apartment",
-          appliedDate: "2024-01-15",
-          status: "Pending",
-          landlordName: "John Smith",
-          applicationId: "APP-001"
-        },
-        {
-          id: 2,
-          propertyTitle: "Family Home with Garden",
-          propertyLocation: "North Shore",
-          propertyPrice: "$850/week",
-          propertyType: "House",
-          appliedDate: "2024-01-10",
-          status: "Approved",
-          landlordName: "Sarah Johnson",
-          applicationId: "APP-002"
-        },
-        {
-          id: 3,
-          propertyTitle: "Cozy Studio Unit",
-          propertyLocation: "Parnell",
-          propertyPrice: "$450/week",
-          propertyType: "Studio",
-          appliedDate: "2024-01-08",
-          status: "Rejected",
-          landlordName: "Mike Wilson",
-          applicationId: "APP-003"
-        },
-        {
-          id: 4,
-          propertyTitle: "Luxury Waterfront Condo",
-          propertyLocation: "Mission Bay",
-          propertyPrice: "$1,200/week",
-          propertyType: "Condo",
-          appliedDate: "2024-01-05",
-          status: "Under Review",
-          landlordName: "Lisa Brown",
-          applicationId: "APP-004"
-        }
-      ]);
+    if (user) {
+      loadApplications();
+    }
+  }, [user]);
+
+  const loadApplications = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const result = await getTenantApplications(user.uid);
+      if (result.success) {
+        // Load property details for each application
+        const applicationsWithDetails = await Promise.all(
+          result.data.map(async (application) => {
+            try {
+              const propertyResult = await getProperty(application.propertyId);
+              if (propertyResult.success) {
+                return {
+                  ...application,
+                  property: propertyResult.data
+                };
+              }
+              return application;
+            } catch (error) {
+              console.error('Error loading property details:', error);
+              return application;
+            }
+          })
+        );
+        
+        setApplications(applicationsWithDetails);
+      } else {
+        setError(result.error);
+      }
+    } catch (error) {
+      setError('Failed to load applications');
+      console.error('Error loading applications:', error);
+    } finally {
       setLoading(false);
-    }, 1000);
-  }, []);
+    }
+  };
+
+  const handleWithdrawApplication = async (applicationId) => {
+    if (!window.confirm('Are you sure you want to withdraw this application?')) {
+      return;
+    }
+
+    try {
+      const result = await withdrawApplication(applicationId, user.uid);
+      if (result.success) {
+        // Update local state
+        setApplications(prev => 
+          prev.map(app => 
+            app.id === applicationId 
+              ? { ...app, status: 'withdrawn' }
+              : app
+          )
+        );
+        alert('Application withdrawn successfully');
+      } else {
+        alert('Error withdrawing application: ' + result.error);
+      }
+    } catch (error) {
+      console.error('Error withdrawing application:', error);
+      alert('Error withdrawing application. Please try again.');
+    }
+  };
 
   const getStatusIcon = (status) => {
-    switch (status) {
-      case 'Pending':
+    switch (status?.toLowerCase()) {
+      case 'pending':
         return <Clock size={16} className="status-icon pending" />;
-      case 'Approved':
+      case 'approved':
         return <CheckCircle size={16} className="status-icon approved" />;
-      case 'Rejected':
+      case 'rejected':
         return <XCircle size={16} className="status-icon rejected" />;
-      case 'Under Review':
-        return <AlertCircle size={16} className="status-icon review" />;
+      case 'withdrawn':
+        return <XCircle size={16} className="status-icon withdrawn" />;
       default:
         return <Clock size={16} className="status-icon pending" />;
     }
   };
 
   const getStatusColor = (status) => {
-    switch (status) {
-      case 'Pending':
+    switch (status?.toLowerCase()) {
+      case 'pending':
         return 'status-pending';
-      case 'Approved':
+      case 'approved':
         return 'status-approved';
-      case 'Rejected':
+      case 'rejected':
         return 'status-rejected';
-      case 'Under Review':
-        return 'status-review';
+      case 'withdrawn':
+        return 'status-withdrawn';
       default:
         return 'status-pending';
     }
   };
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-NZ', {
+  const formatDate = (date) => {
+    if (!date) return '';
+    const d = date?.toDate ? date.toDate() : new Date(date);
+    return d.toLocaleDateString('en-NZ', {
       year: 'numeric',
       month: 'short',
       day: 'numeric'
     });
+  };
+
+  const formatPrice = (price) => {
+    return `$${price?.toLocaleString()}/week`;
   };
 
   if (loading) {
@@ -106,9 +133,24 @@ const Applications = () => {
       <UserLayout title="Applications" subtitle="Loading your applications...">
         <div className="loading-container">
           <div className="loading-logo">
-            <img src="/src/assets/Logo.png" alt="Domio.nz Logo" />
+            <img src={Logo} alt="Domio.nz Logo" />
           </div>
           <p>Loading your applications...</p>
+        </div>
+      </UserLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <UserLayout title="Applications" subtitle="Error loading applications">
+        <div className="error-container">
+          <AlertCircle size={64} className="error-icon" />
+          <h3>Error Loading Applications</h3>
+          <p>{error}</p>
+          <button className="retry-btn" onClick={loadApplications}>
+            Try Again
+          </button>
         </div>
       </UserLayout>
     );
@@ -155,53 +197,72 @@ const Applications = () => {
               <div className="application-header">
                 <div className="application-id">
                   <FileText size={16} />
-                  <span>{application.applicationId}</span>
+                  <span>APP-{application.id.slice(-6).toUpperCase()}</span>
                 </div>
                 <div className={`application-status ${getStatusColor(application.status)}`}>
                   {getStatusIcon(application.status)}
-                  <span>{application.status}</span>
+                  <span>{application.status?.charAt(0).toUpperCase() + application.status?.slice(1)}</span>
                 </div>
               </div>
 
               <div className="application-content">
                 <div className="property-info">
-                  <h3 className="property-title">{application.propertyTitle}</h3>
+                  <h3 className="property-title">
+                    {application.property?.title || 'Property Not Found'}
+                  </h3>
                   
                   <div className="property-details">
                     <div className="detail-item">
                       <Building2 size={16} />
-                      <span>{application.propertyType}</span>
+                      <span>{application.property?.type?.charAt(0).toUpperCase() + application.property?.type?.slice(1) || 'Unknown'}</span>
                     </div>
                     <div className="detail-item">
                       <MapPin size={16} />
-                      <span>{application.propertyLocation}</span>
+                      <span>{application.property?.address || 'Location Unknown'}</span>
                     </div>
                     <div className="detail-item">
                       <DollarSign size={16} />
-                      <span>{application.propertyPrice}</span>
+                      <span>{formatPrice(application.property?.rent)}</span>
                     </div>
                   </div>
                 </div>
 
                 <div className="application-details">
                   <div className="detail-row">
-                    <span className="detail-label">Landlord:</span>
-                    <span className="detail-value">{application.landlordName}</span>
-                  </div>
-                  <div className="detail-row">
                     <span className="detail-label">Applied:</span>
-                    <span className="detail-value">{formatDate(application.appliedDate)}</span>
+                    <span className="detail-value">{formatDate(application.createdAt)}</span>
                   </div>
+                  {application.message && (
+                    <div className="detail-row">
+                      <span className="detail-label">Message:</span>
+                      <span className="detail-value">{application.message}</span>
+                    </div>
+                  )}
                 </div>
               </div>
 
               <div className="application-actions">
-                <button className="action-btn primary">View Details</button>
-                {application.status === 'Pending' && (
-                  <button className="action-btn secondary">Withdraw</button>
+                <button 
+                  className="action-btn primary"
+                  onClick={() => window.open(`/property/${application.propertyId}`, '_blank')}
+                >
+                  <Eye size={16} />
+                  View Property
+                </button>
+                {application.status?.toLowerCase() === 'pending' && (
+                  <button 
+                    className="action-btn danger"
+                    onClick={() => handleWithdrawApplication(application.id)}
+                  >
+                    <Trash2 size={16} />
+                    Withdraw
+                  </button>
                 )}
-                {application.status === 'Approved' && (
-                  <button className="action-btn success">Accept</button>
+                {application.status?.toLowerCase() === 'approved' && (
+                  <button className="action-btn success">
+                    <CheckCircle size={16} />
+                    Accept Offer
+                  </button>
                 )}
               </div>
             </div>

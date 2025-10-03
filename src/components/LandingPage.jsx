@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
+import Logo from "../assets/Logo.png";
+import { Home, Search, User, MapPin } from "lucide-react";
 import "../styles/LandingPage.css";
 
 export default function LandingPage() {
@@ -37,8 +39,6 @@ export default function LandingPage() {
 
   return (
     <div className="landing-page">
-      {/* Debug Info - Removed for production */}
-
       {/* Light Theme Background */}
       <div className="light-background">
         <div className="gradient-sky"></div>
@@ -50,14 +50,26 @@ export default function LandingPage() {
       <nav className="navbar">
         <div className="nav-container">
           <div className="nav-logo">
-            <img src="/src/assets/Logo.png" alt="Domio.nz Logo" className="logo-image" />
+            <img src={Logo} alt="Domio.nz Logo" className="logo-image" />
           </div>
 
           <div className={`nav-menu ${isMenuOpen ? 'active' : ''}`}>
-            <Link to="/" className="nav-link">Home</Link>
-            <Link to="/properties" className="nav-link">Properties</Link>
-            <Link to="/about" className="nav-link">About</Link>
-            <Link to="/contact" className="nav-link">Contact</Link>
+            <Link to="/" className="nav-link">
+              <Home size={16} />
+              <span>Home</span>
+            </Link>
+            <Link to="/browse" className="nav-link">
+              <Search size={16} />
+              <span>Properties</span>
+            </Link>
+            <Link to="/about" className="nav-link">
+              <User size={16} />
+              <span>About</span>
+            </Link>
+            <Link to="/contact" className="nav-link">
+              <MapPin size={16} />
+              <span>Contact</span>
+            </Link>
           </div>
 
           <div className="nav-auth">
@@ -87,8 +99,14 @@ export default function LandingPage() {
               </div>
             ) : (
               <>
-                <Link to="/login" className="nav-btn login-btn">Log In</Link>
-                <Link to="/signup" className="nav-btn signup-btn">Sign Up</Link>
+                <Link to="/login" className="nav-btn login-btn">
+                  <User size={16} />
+                  <span>Log In</span>
+                </Link>
+                <Link to="/signup" className="nav-btn signup-btn">
+                  <User size={16} />
+                  <span>Sign Up</span>
+                </Link>
               </>
             )}
           </div>
@@ -124,7 +142,7 @@ export default function LandingPage() {
             }
           </p>
           <div className="hero-actions">
-            <Link to="/properties" className="hero-btn primary">Browse Properties</Link>
+            <Link to="/browse" className="hero-btn primary">Browse Properties</Link>
             {user ? (
               <Link to="/my-properties" className="hero-btn secondary">My Properties</Link>
             ) : (
@@ -134,37 +152,13 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Search Section */}
-      <section className="search-section">
-        <div className="search-container">
-          <h2>Find Your Perfect Home</h2>
-          <div className="search-form">
-            <input type="text" placeholder="Enter location, suburb, or city..." className="search-input" />
-            <select className="search-select">
-              <option value="">Property Type</option>
-              <option value="apartment">Apartment</option>
-              <option value="house">House</option>
-              <option value="townhouse">Townhouse</option>
-              <option value="studio">Studio</option>
-            </select>
-            <select className="search-select">
-              <option value="">Bedrooms</option>
-              <option value="1">1+</option>
-              <option value="2">2+</option>
-              <option value="3">3+</option>
-              <option value="4">4+</option>
-            </select>
-            <button className="search-btn">Search</button>
-          </div>
-        </div>
-      </section>
 
       {/* Featured Listings */}
       <section className="featured-listings">
         <div className="container">
           <div className="section-header">
-            <h2>Featured Properties</h2>
-            <p>Discover our handpicked selection of premium rental properties</p>
+            <h2>Discover Your Perfect Home</h2>
+            <p>Explore our carefully curated selection of premium rental properties across New Zealand</p>
           </div>
 
           <div className="listings-grid">
@@ -173,6 +167,9 @@ export default function LandingPage() {
                 <div className="listing-image">
                   <span className="listing-emoji">{listing.image}</span>
                   <div className="listing-type">{listing.type}</div>
+                  <div className="listing-overlay">
+                    <Link to={`/property/${listing.id}`} className="quick-view-btn">Quick View</Link>
+                  </div>
                 </div>
                 <div className="listing-content">
                   <h3 className="listing-title">{listing.title}</h3>
@@ -189,7 +186,10 @@ export default function LandingPage() {
           </div>
 
           <div className="view-all-container">
-            <Link to="/properties" className="view-all-btn">View All Properties</Link>
+            <Link to="/browse" className="view-all-btn">
+              <span>Browse All Properties</span>
+              <span className="btn-arrow">→</span>
+            </Link>
           </div>
         </div>
       </section>
@@ -205,69 +205,31 @@ export default function LandingPage() {
           <div className="steps-grid">
             <div className="step-card">
               <div className="step-icon">🔍</div>
-              <h3>Search</h3>
-              <p>Browse thousands of properties with our advanced search filters</p>
+              <h3>1. Search & Discover</h3>
+              <p>Browse thousands of verified properties with our intelligent search filters and personalized recommendations</p>
             </div>
             <div className="step-card">
               <div className="step-icon">💬</div>
-              <h3>Connect</h3>
-              <p>Message landlords directly and schedule viewings</p>
+              <h3>2. Connect & Communicate</h3>
+              <p>Message landlords directly through our secure platform and schedule convenient property viewings</p>
             </div>
             <div className="step-card">
               <div className="step-icon">📝</div>
-              <h3>Apply</h3>
-              <p>Submit applications and manage your rental process</p>
+              <h3>3. Apply & Secure</h3>
+              <p>Submit digital applications with all required documents and track your application status in real-time</p>
             </div>
             <div className="step-card">
               <div className="step-icon">🏠</div>
-              <h3>Move In</h3>
-              <p>Sign your lease and move into your new home</p>
+              <h3>4. Move In & Enjoy</h3>
+              <p>Sign your lease digitally and move into your new home with our seamless onboarding process</p>
             </div>
           </div>
+
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="stats-section">
-        <div className="container">
-          <div className="stats-grid">
-            <div className="stat-item">
-              <div className="stat-number">15,000+</div>
-              <div className="stat-label">Properties Available</div>
-            </div>
-            <div className="stat-item">
-              <div className="stat-number">75,000+</div>
-              <div className="stat-label">Happy Tenants</div>
-            </div>
-            <div className="stat-item">
-              <div className="stat-number">8,500+</div>
-              <div className="stat-label">Trusted Landlords</div>
-            </div>
-            <div className="stat-item">
-              <div className="stat-number">24/7</div>
-              <div className="stat-label">Customer Support</div>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      {/* CTA Section */}
-      <section className="cta-section">
-        <div className="container">
-          <div className="cta-content">
-            <h2>Ready to Find Your Perfect Home?</h2>
-            <p>Join over 75,000 happy tenants who have found their ideal rental property through DOMIO.NZ</p>
-            <div className="cta-buttons">
-              {user ? (
-                <Link to="/properties" className="cta-btn primary">Browse Properties</Link>
-              ) : (
-                <Link to="/signup" className="cta-btn primary">Get Started Today</Link>
-              )}
-              <Link to="/properties" className="cta-btn secondary">Browse Properties</Link>
-            </div>
-          </div>
-        </div>
-      </section>
+
 
       {/* Footer */}
       <footer className="footer">
@@ -280,25 +242,25 @@ export default function LandingPage() {
             <div className="footer-section">
               <h4>For Tenants</h4>
               <ul>
-                <li><Link to="/properties">Browse Properties</Link></li>
-                <li><Link to="/how-it-works">How It Works</Link></li>
-                <li><Link to="/tenant-guide">Tenant Guide</Link></li>
+                <li><Link to="/browse">Browse Properties</Link></li>
+                <li><Link to="/about">About Us</Link></li>
+                <li><Link to="/signup">Get Started</Link></li>
               </ul>
             </div>
             <div className="footer-section">
               <h4>For Landlords</h4>
               <ul>
-                <li><Link to="/landlord-signup">List Your Property</Link></li>
-                <li><Link to="/landlord-guide">Landlord Guide</Link></li>
-                <li><Link to="/pricing">Pricing</Link></li>
+                <li><Link to="/signup">List Your Property</Link></li>
+                <li><Link to="/about">How It Works</Link></li>
+                <li><Link to="/login">Landlord Login</Link></li>
               </ul>
             </div>
             <div className="footer-section">
               <h4>Support</h4>
               <ul>
-                <li><Link to="/contact">Contact Us</Link></li>
-                <li><Link to="/help">Help Center</Link></li>
-                <li><Link to="/terms">Terms of Service</Link></li>
+                <li><Link to="/about">Contact Us</Link></li>
+                <li><Link to="/browse">Help Center</Link></li>
+                <li><Link to="/about">About</Link></li>
               </ul>
             </div>
           </div>
